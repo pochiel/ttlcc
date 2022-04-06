@@ -2,6 +2,10 @@
  A wrapper language transpiler that outputs Tera Term macros.
  Tera Term マクロを出力するラッパー言語のトランスパイラ。
 
+まだ言語仕様を練っている段階なので、このリポジトリには全く役に立つものは入ってない。　回れ右。
+ローカルでテキストに言語仕様を書いていたらいろいろあって書いていたほとんどをロストしてしまったのであった。　いっぱい悲しい。
+やっぱ git は正義なんやな。
+
 # ttlcとは
 ttlc(Tera Term Language custom)とは、Tera Termのマクロ言語である
 ttl(Tera Term Language)のラッパー言語である。
