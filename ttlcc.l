@@ -19,16 +19,24 @@ extern int yydebug;
 	yylval.ctype->token_str = std::regex_replace(_b__buf__, std::regex("\n|\r\n|\r"), "");		\
 }
 
+// _b__buf__ は char *
+#define SET_RETURN_TYPE(_b__type__)	{																\
+	std::string temp;																			\
+	yylval.ctype = new t_token();																\
+	yylval.ctype->type = _b__type__;															\
+}
+
 %}
 
 white       [ |\t|\r|\n]
-floating    [0-9]+\.[0-9]+
 integer     [0-9]+
 symbol      [=+\-\^*/();\n]
 letter      [_[:alpha:]][_[:alnum:]]*
 other       .
 other_cr	[[.]]
 all_of_char	[^\{\};]
+DIGIT    [[:digit:]]
+NUMBER   {integer}
 
 %x ST_COMMENT
 %x ST_STR_RETERAL
@@ -95,7 +103,7 @@ all_of_char	[^\{\};]
 %{  /*********************************************************************************
 	*  行末を検出する。
 	*/ %}
-	;										{	return(CR);			}
+	;										{	return(CR);						}
 
 %{  /*********************************************************************************
 	*  returnを検出する。
@@ -105,9 +113,9 @@ all_of_char	[^\{\};]
 %{  /*********************************************************************************
 	*  int/string/void を検出する。
 	*/ %}
-	int										{	return(INT);			}
-	string									{	return(STRING);			}
-	void									{	return(VOID);			}
+	int										{	SET_RETURN_TYPE(TYPE_INT); return(INT);			}
+	string									{	SET_RETURN_TYPE(TYPE_STRING); return(STRING);	}
+	void									{	SET_RETURN_TYPE(TYPE_VOID); return(VOID);		}
 
 %{  /*********************************************************************************
 	*  演算子を検出する。
@@ -143,6 +151,11 @@ all_of_char	[^\{\};]
 	"&&"									{	return(LOGICAL_AND);				}
 	"||"									{	return(LOGICAL_OR);					}
 
+	{NUMBER} 								{
+												printf("NUMBER\n");
+												SET_YYLVAL(yytext); return(INT_RETERAL);
+											}
+
 %{  /*********************************************************************************
 	*  import を検出する。
 	*/ %}
@@ -166,6 +179,13 @@ all_of_char	[^\{\};]
 <<EOF>>			{ // printf("end of file\n");
 					return(0); }
 
+%{  /*****************************************************************************************************************************************************************
+	******************************************************************************************************************************************************************
+	* トークンの検出処理
+	*	責務：トークンを検出し、SET_YYLVALし、return(TOKEN)する 
+	******************************************************************************************************************************************************************
+	******************************************************************************************************************************************************************/ %}
+	{letter}								{ SET_YYLVAL(yytext); return(TOKEN); }
 %%
 
 #define C_OUTPUT_FILE_MAX    (256)
@@ -189,7 +209,7 @@ int main(int argc, char *argv[])
 #endif
 
     /* default name. */
-    strncpy(output_filne_name, "out.puml", C_OUTPUT_FILE_MAX);
+    strncpy(output_filne_name, "out.ttl", C_OUTPUT_FILE_MAX);
 
     for(i = 1; i < argc; ++i){
         if(*argv[i] == '-'){

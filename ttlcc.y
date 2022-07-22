@@ -41,10 +41,20 @@ extern "C" int  yylex(void);
 
 %defines
 /* 終端記号 */
-%token<ctype> IF ELSE EXPR ELSEIF THEN ENDIF FOR WHILE FUNCTION ENDFUNCTION DO BREAK CONTINUE RETRN CR INT STRING VOID EQUAL BRACE END_BRACE NOT PLUS MINUS ASTA SLASH MOD LEFT_SHIFT RIGHT_SHIFT LEFT_SHIFT_LOGIC RIGHT_SHIFT_LOGIC BIT_AND BIT_XOR BIT_OR GRATER_THAN_LEFT GRATER_THAN_RIGHT EQUAL_GRATER_THAN_LEFT EQUAL_GRATER_THAN_RIGHT EQUAL_EQUAL NOT_EQUAL LOGICAL_AND LOGICAL_OR IMPORT TO STEP NEXT LOOP ENDWHILE STR_RETERAL
-
+%token<ctype> IF ELSE ELSEIF THEN ENDIF
+%token<ctype> FOR TO STEP NEXT 
+%token<ctype> WHILE DO LOOP ENDWHILE 
+%token<ctype> FUNCTION ENDFUNCTION
+%token<ctype> BREAK CONTINUE RETRN 
+%token<ctype> INT STRING VOID STR_RETERAL INT_RETERAL
+%token<ctype> EQUAL NOT PLUS MINUS ASTA SLASH MOD LEFT_SHIFT RIGHT_SHIFT LEFT_SHIFT_LOGIC RIGHT_SHIFT_LOGIC
+%token<ctype> BIT_AND BIT_XOR BIT_OR GRATER_THAN_LEFT GRATER_THAN_RIGHT EQUAL_GRATER_THAN_LEFT EQUAL_GRATER_THAN_RIGHT
+%token<ctype> EQUAL_EQUAL NOT_EQUAL LOGICAL_AND LOGICAL_OR 
+%token<ctype> EXPR
+%token<ctype> TOKEN
+%token<ctype> CR BRACE END_BRACE IMPORT
 /* 非終端記号 */
-%type<ctype> program codes ifst forst functionst dowhilest retrnst breakst
+%type<ctype> program codes var ifst forst functionst dowhilest retrnst breakst expr return_types args typest
 
 %start program
 
@@ -56,7 +66,11 @@ program		:	program program					{ $$ = new t_token(*$1 + *$2); }
 			;
 
 /* 関数とはなんぞや */
-functionst	:	FUNCTION BRACE codes END_BRACE	{
+functionst	:	FUNCTION return_types TOKEN BRACE args END_BRACE codes ENDFUNCTION	{
+														std::cout << "return_types:" << $2->token_str << "\n";
+														std::cout << "TOKEN:" << $3->token_str << "\n";
+														std::cout << "args:" << $5->token_str << "\n";
+														std::cout << "codes:" << $7->token_str << "\n";
 	/*
 														std::string output_str = "@startuml " + get_function_name($1->token_str) + "\n"
 																					+ ":" + ($1->token_str) + ";\n" 
@@ -71,8 +85,41 @@ functionst	:	FUNCTION BRACE codes END_BRACE	{
 													}
 			;
 
+return_types:	return_types return_types		{ $$ = new t_token(*$1 + *$2); }
+			|	typest							{ $$ = $1; }
+			;
+
+typest		:	INT								{ $$ = $1; }
+			|	STRING							{ $$ = $1; }
+			|	VOID							{ $$ = $1; }
+			;
+
+var			:	typest TOKEN					{
+													$$ = new t_token(*$2);
+													switch($1->type){
+														case TYPE_STRING:
+															// string型変数を初期化
+															$$->token_str = $$->token_str + "=''";
+															break;
+														case TYPE_INT:
+															// int型変数を初期化
+															$$->token_str = $$->token_str + "=0";
+															break;
+														case TYPE_VOID:
+														default:
+															/* do nothing. */
+															break;
+													}
+													}
+			|	VOID							{ $$ = $1; $$->token_str = ""; }
+			;
+
+args		:	args args						{ $$ = new t_token(*$1 + *$2); }
+			|	var								{ $$ = $1; }
+			;
 
 codes		:	codes codes						{ $$ = new t_token(*$1 + *$2); }	
+			|	var								{ $$ = $1; }
 			|	ifst							{ $$ = $1; }
 			|	forst							{ $$ = $1; }
 			|	dowhilest						{ $$ = $1; }
@@ -83,12 +130,30 @@ codes		:	codes codes						{ $$ = new t_token(*$1 + *$2); }
 													ret->token_str = ":continue;\n";
 													$$ = ret; 
 												}
+			|	expr							{ $$ = $1; }
 			|	retrnst							{ $$ = $1; }
+			|	CR								{ $$ = $1; $$->token_str = "\n";}
 			;
 
 ifst		: IF								{/* dummy */}
 forst		: FOR								{/* dummy */}
 dowhilest	: WHILE								{/* dummy */}
+
+/* 超暫定 */
+expr		: expr expr							{ $$ = new t_token(*$1 + *$2); }
+			| INT_RETERAL						{ $$ = $1; }
+			| expr PLUS expr					{ $$ = new t_token(); $$->token_str = $1->token_str + "+" + $3->token_str; }
+			| expr MINUS expr					{ $$ = new t_token(); $$->token_str = $1->token_str + "-" + $3->token_str; }
+			| expr ASTA expr					{ $$ = new t_token(); $$->token_str = $1->token_str + "*" + $3->token_str; }
+			| expr SLASH expr					{ $$ = new t_token(); $$->token_str = $1->token_str + "/" + $3->token_str; }
+			| expr MOD expr						{ $$ = new t_token(); $$->token_str = $1->token_str + "%" + $3->token_str; }
+			| TOKEN EQUAL expr					{ $$ = new t_token(); $$->token_str = $1->token_str + "=" + $3->token_str; }
+			| TOKEN								{ $$ = $1; }
+			| CR								{ $$ = $1; $$->token_str = "\n"; }
+			;
+
+
+
 //ifst		: IF EXPR block						{
 //													t_token *ret = new t_token();;
 //													ret->token_str = 	"if (" + $2->token_str + ") then (true)\n" 
@@ -162,6 +227,7 @@ retrnst		:	RETRN EXPR		{
 									ret->comment = "";	/* コメントは消しておく */
 									$$ = ret;
 								}
+			|	RETRN			{ }
 			;
 
 /* break */

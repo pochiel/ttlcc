@@ -1,0 +1,8 @@
+	func int main(void)
+		int test_val;
+		int test_val_2;
+		int test_val_3;
+		test_val=0;
+		/* first program */
+		return 0;
+	endfunc

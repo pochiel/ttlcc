@@ -6,6 +6,7 @@
 	t_token::t_token(const t_token &t){
 		token_str = t.token_str;
 		comment = t.comment;
+		type = t.type;
 	}
 	std::string t_token::get_format_comment() {
 		if(comment.empty()){
@@ -21,5 +22,6 @@
 		t_token ret;
 		ret.token_str = this->token_str + t2.token_str;
 		ret.comment = this->comment + t2.comment;
+		ret.type = this->type;
 		return ret;
 	}

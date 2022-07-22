@@ -1,0 +1,19 @@
+
+
+test_val=0
+goto test_func
+:exit_call_pos
+
+messagebox "end program" "end program"
+exit
+
+:test_func
+	if test_val=3 then
+		messagebox test_val "test_val is 3"
+	else
+		test_val = test_val + 1
+		messagebox test_val "test_val is nots 3"
+		goto test_func
+	endif
+	next_goto = "exit_call_pos"
+	goto next_goto
