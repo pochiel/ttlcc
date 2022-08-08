@@ -1,8 +1,14 @@
-	func int main(void)
+func int main(void)
+	test_func(100);
+	return 0;
+endfunc
+
+func void test_func(int abc)
 		int test_val;
-		int test_val_2;
-		int test_val_3;
-		test_val=0;
+		int test_val_2=1;
+		int test_val_3=2;
+		test_val=test_val_2 + test_val_3 + abc;
 		/* first program */
+		messagebox(test_val, "Hello, World!");
 		return 0;
-	endfunc
+endfunc

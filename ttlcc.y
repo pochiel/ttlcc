@@ -7,12 +7,11 @@
 #include <map>
 #include <regex>
 #include "parser.hpp"
+#include "function.hpp"
 
 void output_to_file(std::string &);
 void get_comment(std::string &buf);
 std::string get_connector(std::string orig_label) ;
-void clear_connector_list() ;
-std::string get_function_name(std::string function_def);
 
 uint32_t get_comment_index();
 
@@ -32,6 +31,7 @@ extern "C" int  yylex(void);
 #include <string>
 #include <iostream>
 #include "t_token.hpp"
+#include "function.hpp"
 }
 
 %union {
@@ -47,41 +47,47 @@ extern "C" int  yylex(void);
 %token<ctype> FUNCTION ENDFUNCTION
 %token<ctype> BREAK CONTINUE RETRN 
 %token<ctype> INT STRING VOID STR_RETERAL INT_RETERAL
-%token<ctype> EQUAL NOT PLUS MINUS ASTA SLASH MOD LEFT_SHIFT RIGHT_SHIFT LEFT_SHIFT_LOGIC RIGHT_SHIFT_LOGIC
+%token<ctype> EQUAL NOT PLUS MINUS ASTA SLASH MOD LEFT_SHIFT RIGHT_SHIFT LEFT_SHIFT_LOGIC RIGHT_SHIFT_LOGIC COMMA
 %token<ctype> BIT_AND BIT_XOR BIT_OR GRATER_THAN_LEFT GRATER_THAN_RIGHT EQUAL_GRATER_THAN_LEFT EQUAL_GRATER_THAN_RIGHT
 %token<ctype> EQUAL_EQUAL NOT_EQUAL LOGICAL_AND LOGICAL_OR 
 %token<ctype> EXPR
-%token<ctype> TOKEN
+%token<ctype> TOKEN RESERVED_WORD
 %token<ctype> CR BRACE END_BRACE IMPORT
 /* îÒèIí[ãLçÜ */
-%type<ctype> program codes var ifst forst functionst dowhilest retrnst breakst expr return_types args typest
+%type<ctype> program codes var ifst forst functionst dowhilest retrnst breakst expr return_types args typest callst manytokenst functionnamest
 
 %start program
 
 %%
 
 /* ÉvÉçÉOÉâÉÄÇ∆ÇÕÇ»ÇÒÇºÇ‚ */
-program		:	program program					{ $$ = new t_token(*$1 + *$2); }
+program		:	program program					{ 	
+													output_to_file($1->token_str);
+													output_to_file($2->token_str);
+												}
 			|	functionst						{ $$ = $1; }
 			;
 
+functionnamest	:	TOKEN						{ 
+													$1->type = TYPE_FUNCTION;
+													set_function_name($1->token_str);
+													$$ = $1;
+												}
+
 /* ä÷êîÇ∆ÇÕÇ»ÇÒÇºÇ‚ */
-functionst	:	FUNCTION return_types TOKEN BRACE args END_BRACE codes ENDFUNCTION	{
+functionst	:	FUNCTION return_types functionnamest BRACE args END_BRACE codes ENDFUNCTION	{
+														$$ = new t_token();
 														std::cout << "return_types:" << $2->token_str << "\n";
 														std::cout << "TOKEN:" << $3->token_str << "\n";
 														std::cout << "args:" << $5->token_str << "\n";
 														std::cout << "codes:" << $7->token_str << "\n";
-	/*
-														std::string output_str = "@startuml " + get_function_name($1->token_str) + "\n"
-																					+ ":" + ($1->token_str) + ";\n" 
-																					+ ($1->get_format_comment()) + "\n" 
-																					+ "start\n" 
-																					+ ($3->token_str) + "\n"
-																					+ ($3->get_format_comment()) + "\n" 
-																					+ "@enduml\n";
-														output_to_file(output_str);
-														clear_connector_list();
-														*/
+														$$->token_str = 	std::string(
+																					set_input_param(*$5)
+																					+ set_output_param(*$2)
+																					+ ":" + $3->token_str + "\n"
+																					+ $7->token_str + "\n"
+																					+ "return\n"
+														);
 													}
 			;
 
@@ -96,21 +102,63 @@ typest		:	INT								{ $$ = $1; }
 
 var			:	typest TOKEN					{
 													$$ = new t_token(*$2);
+													// ÉçÅ[ÉJÉãïœêîñºÇÃê›íË
+													if(get_function_name() != ""){
+														$$->set_local_name($$->token_str);
+													}
 													switch($1->type){
 														case TYPE_STRING:
 															// stringå^ïœêîÇèâä˙âª
-															$$->token_str = $$->token_str + "=''";
+															$$->token_str = $$->token_str + "=''\n";
 															break;
 														case TYPE_INT:
 															// intå^ïœêîÇèâä˙âª
-															$$->token_str = $$->token_str + "=0";
+															$$->token_str = $$->token_str + "=0\n";
 															break;
 														case TYPE_VOID:
 														default:
-															/* do nothing. */
+															yyerror("[ERROR] A void type variable cannot be created.\n");
 															break;
 													}
+												}
+			|	typest TOKEN EQUAL INT_RETERAL	{
+													$$ = new t_token(*$2);
+													// ÉçÅ[ÉJÉãïœêîñºÇÃê›íË
+													if(get_function_name() != ""){
+														$$->set_local_name($$->token_str);
 													}
+													switch($1->type){
+														case TYPE_STRING:
+															// à√ñŸå^ÉLÉÉÉXÉgÇåoÇƒÇÃ stringå^ïœêîèâä˙âª
+															$$->token_str = $$->token_str + "='" + $4->token_str + "'\n";
+															break;
+														case TYPE_INT:
+															// intå^ïœêîÇèâä˙âª
+															$$->token_str = $$->token_str + "=" + $4->token_str.c_str() + "\n";
+															break;
+														case TYPE_VOID:
+														default:
+															yyerror("[ERROR] A void type variable cannot be created.\n");
+															break;
+													}
+												}
+			|	typest TOKEN EQUAL STR_RETERAL	{
+													$$ = new t_token(*$2);
+													switch($1->type){
+														case TYPE_STRING:
+															// stringå^ïœêîÇèâä˙âª
+															$$->token_str = $$->token_str + "='" + $4->token_str + "'\n";
+															break;
+														case TYPE_INT:
+															// ï∂éöóÒå^Å®êÆêîå^ÇÃà√ñŸÇÃå^ÉLÉÉÉXÉgÇÕçsÇÌÇÍÇ»Ç¢
+															yyerror("[ERROR] trying to assign a string to an integer type variable.\n");
+															break;
+														case TYPE_VOID:
+														default:
+															yyerror("[ERROR] A void type variable cannot be created.\n");
+															break;
+													}
+												}
 			|	VOID							{ $$ = $1; $$->token_str = ""; }
 			;
 
@@ -132,6 +180,7 @@ codes		:	codes codes						{ $$ = new t_token(*$1 + *$2); }
 												}
 			|	expr							{ $$ = $1; }
 			|	retrnst							{ $$ = $1; }
+			|	callst							{ $$ = $1; }
 			|	CR								{ $$ = $1; $$->token_str = "\n";}
 			;
 
@@ -149,10 +198,22 @@ expr		: expr expr							{ $$ = new t_token(*$1 + *$2); }
 			| expr MOD expr						{ $$ = new t_token(); $$->token_str = $1->token_str + "%" + $3->token_str; }
 			| TOKEN EQUAL expr					{ $$ = new t_token(); $$->token_str = $1->token_str + "=" + $3->token_str; }
 			| TOKEN								{ $$ = $1; }
-			| CR								{ $$ = $1; $$->token_str = "\n"; }
 			;
 
+/* ä÷êîåƒÇ—èoÇµ */
+callst		: TOKEN BRACE manytokenst END_BRACE 			{
+																$$ = new t_token();
+																$$->token_str = initialize_arg($1->token_str, $3->token_str);
+																$$->token_str = $$->token_str + "call " + $1->token_str;
+															}
+			| RESERVED_WORD BRACE manytokenst END_BRACE		{ $$ = new t_token(); $$->token_str = $1->token_str + " " + $3->token_str; }
+			;
 
+manytokenst	: manytokenst COMMA manytokenst					{ $$ = new t_token(); $$->token_str = $1->token_str + " " + $3->token_str; }
+			| TOKEN											{ $$ = $1; }
+			| INT_RETERAL									{ $$ = $1; }
+			| STR_RETERAL									{ $$ = $1; }
+			;
 
 //ifst		: IF EXPR block						{
 //													t_token *ret = new t_token();;
@@ -240,7 +301,6 @@ breakst		:	BREAK			{
 									$$ = ret; 
 								}
 
-
 %%
 
 static std::string g_comment_buf;
@@ -270,13 +330,4 @@ std::string get_connector(std::string orig_label) {
 		ret = g_connector_map[orig_label];	
 	}
 	return ret;
-}
-
-void clear_connector_list() {
-	g_connector_map.clear();
-	connector_index=0;
-}
-
-std::string get_function_name(std::string function_def){
-	return std::regex_replace(function_def, std::regex("\\*"), "(asterisk)");;
 }

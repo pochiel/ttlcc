@@ -1,0 +1,3 @@
+[submodule "sub_module/libmpegts"]
+	path = sub_module/libmpegts
+	url = https://github.com/kierank/libmpegts.git
