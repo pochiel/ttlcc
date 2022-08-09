@@ -86,8 +86,16 @@ functionst	:	FUNCTION return_types functionnamest BRACE args END_BRACE codes END
 																					+ set_output_param(*$2)
 																					+ ":" + $3->token_str + "\n"
 																					+ $7->token_str + "\n"
-																					+ "return\n"
 														);
+														// main関数内にいるなら exit でプログラム終了。	そうでなければ return
+														// 暫定：最終的にはマクロ先頭で call main ジャンプするようにし、returnで戻ってきて終了するのが好ましい。
+														// そのためには、全コードをトランスパイル後に 関数テーブルを走査し、main関数をもっている場合といない場合で
+														// 処理を分けなきゃならん。　めんど。
+														if(get_function_name()=="main") {
+															$$->token_str += "exit\n";
+														} else {
+															$$->token_str += "return\n";
+														}
 													}
 			;
 
@@ -196,8 +204,8 @@ expr		: expr expr							{ $$ = new t_token(*$1 + *$2); }
 			| expr ASTA expr					{ $$ = new t_token(); $$->token_str = $1->token_str + "*" + $3->token_str; }
 			| expr SLASH expr					{ $$ = new t_token(); $$->token_str = $1->token_str + "/" + $3->token_str; }
 			| expr MOD expr						{ $$ = new t_token(); $$->token_str = $1->token_str + "%" + $3->token_str; }
-			| TOKEN EQUAL expr					{ $$ = new t_token(); $$->token_str = $1->token_str + "=" + $3->token_str; }
-			| TOKEN								{ $$ = $1; }
+			| expr EQUAL expr					{ $$ = new t_token(); $$->token_str = $1->token_str + "=" + $3->token_str; }
+			| TOKEN								{ $$ = $1; $$->token_str = $$->convert_name_to_local( get_function_name(), get_argument($$->token_str)) ; }
 			;
 
 /* 関数呼び出し */
@@ -210,7 +218,7 @@ callst		: TOKEN BRACE manytokenst END_BRACE 			{
 			;
 
 manytokenst	: manytokenst COMMA manytokenst					{ $$ = new t_token(); $$->token_str = $1->token_str + " " + $3->token_str; }
-			| TOKEN											{ $$ = $1; }
+			| TOKEN											{ $$ = $1; $$->token_str = $$->convert_name_to_local( get_function_name(), get_argument($$->token_str)) ; }
 			| INT_RETERAL									{ $$ = $1; }
 			| STR_RETERAL									{ $$ = $1; }
 			;

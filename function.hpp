@@ -11,5 +11,6 @@ std::string set_function_name(std::string & name) ;
 std::string get_function_name() ;
 std::string initialize_arg(std::string & function_name, std::string & args) ;
 std::string set_argument(std::string name) ;
+std::string get_argument(std::string name)  ;
 
 #endif // __FUNCTION_H__

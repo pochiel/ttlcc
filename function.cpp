@@ -26,6 +26,13 @@ std::string set_argument(std::string name) {
     return ret;
 }
 
+// 引数名から、実効引数名を返す
+std::string get_argument(std::string name) {
+    std::string ret = "arg" + std::to_string(argument_table[name]);
+    return ret;
+}
+
+
 std::string get_function_name() {
     return current_function_name;
 }
