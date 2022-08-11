@@ -109,8 +109,9 @@ NUMBER   {integer}
 	*/ %}
 	"("										{	return(BRACE);						}
 	")"										{	return(END_BRACE);					}
-	"not"									{	return(NOT);						}
-	"!"										{	return(NOT);						}
+	"not"									{	return(BIT_NOT);					}
+	"~"										{	return(BIT_NOT);					}
+	"!"										{	return(LOGICAL_NOT);				}
 	"+"										{	return(PLUS);						}
 	"-"										{	return(MINUS);						}
 	"*"										{	return(ASTA);						}

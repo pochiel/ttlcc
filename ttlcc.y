@@ -47,9 +47,9 @@ extern "C" int  yylex(void);
 %token<ctype> FUNCTION ENDFUNCTION
 %token<ctype> BREAK CONTINUE RETRN 
 %token<ctype> INT STRING VOID STR_RETERAL INT_RETERAL
-%token<ctype> EQUAL NOT PLUS MINUS ASTA SLASH MOD LEFT_SHIFT RIGHT_SHIFT LEFT_SHIFT_LOGIC RIGHT_SHIFT_LOGIC COMMA
+%token<ctype> EQUAL BIT_NOT PLUS MINUS ASTA SLASH MOD LEFT_SHIFT RIGHT_SHIFT LEFT_SHIFT_LOGIC RIGHT_SHIFT_LOGIC COMMA
 %token<ctype> BIT_AND BIT_XOR BIT_OR GRATER_THAN_LEFT GRATER_THAN_RIGHT EQUAL_GRATER_THAN_LEFT EQUAL_GRATER_THAN_RIGHT
-%token<ctype> EQUAL_EQUAL NOT_EQUAL LOGICAL_AND LOGICAL_OR 
+%token<ctype> EQUAL_EQUAL LOGICAL_NOT NOT_EQUAL LOGICAL_AND LOGICAL_OR 
 %token<ctype> EXPR
 %token<ctype> TOKEN RESERVED_WORD
 %token<ctype> CR BRACE END_BRACE IMPORT
@@ -206,14 +206,25 @@ expr		: expr expr							{ $$ = new t_token(*$1 + *$2); }
 			| expr SLASH expr					{ $$ = new t_token(); $$->token_str = $1->token_str + "/" + $3->token_str; }
 			| expr MOD expr						{ $$ = new t_token(); $$->token_str = $1->token_str + "%" + $3->token_str; }
 			| expr EQUAL expr					{ $$ = new t_token(); $$->token_str = $1->token_str + "=" + $3->token_str; }
+			// ˜_—‰‰ŽZŒn
 			| expr EQUAL_EQUAL expr				{ $$ = new t_token(); $$->token_str = $1->token_str + "==" + $3->token_str; }
 			| expr NOT_EQUAL expr				{ $$ = new t_token(); $$->token_str = $1->token_str + "<>" + $3->token_str; }
+			| expr LOGICAL_NOT					{ $$ = new t_token(); $$->token_str = "!" + $1->token_str; 					}
 			| expr LOGICAL_AND expr				{ $$ = new t_token(); $$->token_str = $1->token_str + "&&" + $3->token_str; }
 			| expr LOGICAL_OR expr				{ $$ = new t_token(); $$->token_str = $1->token_str + "||" + $3->token_str; }
 			| expr GRATER_THAN_LEFT expr		{ $$ = new t_token(); $$->token_str = $1->token_str + "<" + $3->token_str; }
 			| expr GRATER_THAN_RIGHT expr		{ $$ = new t_token(); $$->token_str = $1->token_str + ">" + $3->token_str; }
 			| expr EQUAL_GRATER_THAN_LEFT expr	{ $$ = new t_token(); $$->token_str = $1->token_str + "=<" + $3->token_str; }
 			| expr EQUAL_GRATER_THAN_RIGHT expr	{ $$ = new t_token(); $$->token_str = $1->token_str + "=>" + $3->token_str; }
+			// ƒrƒbƒg‰‰ŽZŒn
+			| BIT_NOT expr						{ $$ = new t_token(); $$->token_str = "~" + $1->token_str; }
+			| expr LEFT_SHIFT expr				{ $$ = new t_token(); $$->token_str = $1->token_str + "<<" + $3->token_str; }
+			| expr RIGHT_SHIFT expr				{ $$ = new t_token(); $$->token_str = $1->token_str + ">>" + $3->token_str; }
+			| expr LEFT_SHIFT_LOGIC expr		{ $$ = new t_token(); $$->token_str = $1->token_str + "<<<" + $3->token_str; }
+			| expr RIGHT_SHIFT_LOGIC expr		{ $$ = new t_token(); $$->token_str = $1->token_str + ">>>" + $3->token_str; }
+			| expr BIT_AND expr					{ $$ = new t_token(); $$->token_str = $1->token_str + "&" + $3->token_str; }
+			| expr BIT_OR expr					{ $$ = new t_token(); $$->token_str = $1->token_str + "|" + $3->token_str; }
+			| expr BIT_XOR expr					{ $$ = new t_token(); $$->token_str = $1->token_str + "|" + $3->token_str; }
 			| TOKEN								{ $$ = $1; $$->token_str = $$->convert_name_to_local( get_function_name(), get_argument($$->token_str)) ; }
 			;
 
