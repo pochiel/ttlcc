@@ -192,19 +192,28 @@ codes		:	codes codes						{ $$ = new t_token(*$1 + *$2); }
 			|	CR								{ $$ = $1; $$->token_str = "\n";}
 			;
 
-ifst		: IF								{/* dummy */}
 forst		: FOR								{/* dummy */}
 dowhilest	: WHILE								{/* dummy */}
 
 /* 超暫定 */
 expr		: expr expr							{ $$ = new t_token(*$1 + *$2); }
 			| INT_RETERAL						{ $$ = $1; }
+			| STR_RETERAL						{ $$ = $1; }
+			| BRACE expr END_BRACE				{ $$ = new t_token(); $$->token_str = "(" + $2->token_str + ")"; }
 			| expr PLUS expr					{ $$ = new t_token(); $$->token_str = $1->token_str + "+" + $3->token_str; }
 			| expr MINUS expr					{ $$ = new t_token(); $$->token_str = $1->token_str + "-" + $3->token_str; }
 			| expr ASTA expr					{ $$ = new t_token(); $$->token_str = $1->token_str + "*" + $3->token_str; }
 			| expr SLASH expr					{ $$ = new t_token(); $$->token_str = $1->token_str + "/" + $3->token_str; }
 			| expr MOD expr						{ $$ = new t_token(); $$->token_str = $1->token_str + "%" + $3->token_str; }
 			| expr EQUAL expr					{ $$ = new t_token(); $$->token_str = $1->token_str + "=" + $3->token_str; }
+			| expr EQUAL_EQUAL expr				{ $$ = new t_token(); $$->token_str = $1->token_str + "==" + $3->token_str; }
+			| expr NOT_EQUAL expr				{ $$ = new t_token(); $$->token_str = $1->token_str + "<>" + $3->token_str; }
+			| expr LOGICAL_AND expr				{ $$ = new t_token(); $$->token_str = $1->token_str + "&&" + $3->token_str; }
+			| expr LOGICAL_OR expr				{ $$ = new t_token(); $$->token_str = $1->token_str + "||" + $3->token_str; }
+			| expr GRATER_THAN_LEFT expr		{ $$ = new t_token(); $$->token_str = $1->token_str + "<" + $3->token_str; }
+			| expr GRATER_THAN_RIGHT expr		{ $$ = new t_token(); $$->token_str = $1->token_str + ">" + $3->token_str; }
+			| expr EQUAL_GRATER_THAN_LEFT expr	{ $$ = new t_token(); $$->token_str = $1->token_str + "=<" + $3->token_str; }
+			| expr EQUAL_GRATER_THAN_RIGHT expr	{ $$ = new t_token(); $$->token_str = $1->token_str + "=>" + $3->token_str; }
 			| TOKEN								{ $$ = $1; $$->token_str = $$->convert_name_to_local( get_function_name(), get_argument($$->token_str)) ; }
 			;
 
@@ -223,39 +232,30 @@ manytokenst	: manytokenst COMMA manytokenst					{ $$ = new t_token(); $$->token_
 			| STR_RETERAL									{ $$ = $1; }
 			;
 
-//ifst		: IF EXPR block						{
-//													t_token *ret = new t_token();;
-//													ret->token_str = 	"if (" + $2->token_str + ") then (true)\n" 
-//																		+ ($1->get_format_comment() == "" ? "" : ": ;\n" + $1->get_format_comment() + "\n") 
-//																		+ $3->token_str + "\n"
-//																		+ "endif\n";
-//													ret->comment = "";	/* コメントは消しておく */
-//													$$ = ret;
-//												}
-//			| IF EXPR block ELSE block			{
-//													t_token *ret = new t_token();;
-//													ret->token_str = 	"if (" + $2->token_str + ") then (true)\n" 
-//																		+ ($1->get_format_comment() == "" ? "" : ": ;\n" + $1->get_format_comment() + "\n")
-//																		+ $3->token_str + "\n"
-//																		+ "else\n"
-//																		+ ($4->get_format_comment() == "" ? "" : ": ;\n" + $4->get_format_comment() + "\n")
-//																		+ $5->token_str + "\n"
-//																		+ "endif\n";
-//													ret->comment = "";	/* コメントは消しておく */
-//													$$ = ret;
-//												}
-//			| IF EXPR block ELSE ifst			{
-//													t_token *ret = new t_token();;
-//													ret->token_str = 	"if (" + $2->token_str + ") then (true)\n" 
-//																		+ ($1->get_format_comment() == "" ? "" : ": ;\n" + $1->get_format_comment() + "\n") 
-//																		+ $3->token_str + "\n"
-//																		+ "else" + $5->token_str + "\n"		/* elseif */
-//																		+ ($4->get_format_comment() == "" ? "" : ": ;\n" + $4->get_format_comment() + "\n");
-//													/* 末尾非終端記号の ifst で endifしているはずなので ここでは endif しない */
-//													ret->comment = "";	/* コメントは消しておく */
-//													$$ = ret;
-//												}
-//
+ifst		: IF expr THEN codes ENDIF						{
+																t_token *ret = new t_token();;
+																ret->token_str = 	"if (" + $2->token_str + ") then\n" 
+																					+ $4->token_str + "\n"
+																					+ "endif\n";
+																$$ = ret;
+															}
+			| IF expr THEN codes ELSE codes ENDIF			{
+																t_token *ret = new t_token();;
+																ret->token_str = 	"if (" + $2->token_str + ") then\n" 
+																					+ $4->token_str + "\n"
+																					+ "else\n"
+																					+ $6->token_str + "\n"
+																					+ "endif\n";
+																$$ = ret;
+															}
+			| IF expr THEN codes ELSE ifst					{
+																t_token *ret = new t_token();;
+																ret->token_str = 	"if (" + $2->token_str + ") then\n" 
+																					+ $4->token_str + "\n"
+																					+ "else" + $6->token_str + "\n";
+																$$ = ret;
+															}
+
 //forst   :   FOR EXPR block						{
 //													t_token *ret = new t_token();;
 //													ret->token_str = 	"while (" + $2->token_str + ")\n" 
