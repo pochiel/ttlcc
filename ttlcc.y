@@ -199,6 +199,7 @@ dowhilest	: WHILE								{/* dummy */}
 expr		: expr expr							{ $$ = new t_token(*$1 + *$2); }
 			| INT_RETERAL						{ $$ = $1; }
 			| STR_RETERAL						{ $$ = $1; }
+			| MINUS INT_RETERAL					{ $$ = new t_token(); $$->token_str = "-" + $2->token_str; }
 			| BRACE expr END_BRACE				{ $$ = new t_token(); $$->token_str = "(" + $2->token_str + ")"; }
 			| expr PLUS expr					{ $$ = new t_token(); $$->token_str = $1->token_str + "+" + $3->token_str; }
 			| expr MINUS expr					{ $$ = new t_token(); $$->token_str = $1->token_str + "-" + $3->token_str; }
@@ -267,15 +268,24 @@ ifst		: IF expr THEN codes ENDIF						{
 																$$ = ret;
 															}
 
-//forst   :   FOR EXPR block						{
-//													t_token *ret = new t_token();;
-//													ret->token_str = 	"while (" + $2->token_str + ")\n" 
-//																		+ $1->get_format_comment() + "\n" 
-//																		+ $3->token_str + "\n"
-//																		+ "end while\n";
-//													ret->comment = "";	/* ƒRƒƒ“ƒg‚ÍÁ‚µ‚Ä‚¨‚­ */
-//													$$ = ret;
-//												}
+forst   :   FOR TOKEN EQUAL expr TO expr codes NEXT			{
+																t_token *ret = new t_token();
+																ret->token_str = 	"for " + $2->convert_name_to_local( get_function_name(), get_argument($2->token_str))
+																					+ " " + $4->token_str + " " + $6->token_str + " \n" 
+																					+ $7->token_str + "\n"
+																					+ "next\n";
+																$$ = ret;
+															}
+		|   FOR TOKEN EQUAL expr TO expr STEP expr codes NEXT {
+																t_token *ret = new t_token();
+																std::string counter_val = $2->convert_name_to_local( get_function_name(), get_argument($2->token_str));
+																ret->token_str = 	counter_val + "=" + $4->token_str + "\n"
+																					+ "while " + counter_val + "<>" + $6->token_str + "\n"
+																					+ $9->token_str + "\n"
+																					+ counter_val + "=" + counter_val + "+ (" + $8->token_str + ")\n" 
+																					+ "endwhile\n";
+																$$ = ret;
+															}
 //		|	WHILE EXPR block					{
 //													t_token *ret = new t_token();;
 //													ret->token_str = 	"while (" + $2->token_str + ")\n" 
