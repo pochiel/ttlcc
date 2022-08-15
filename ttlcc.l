@@ -139,10 +139,15 @@ NUMBER   {integer}
 	"&&"									{	return(LOGICAL_AND);				}
 	"||"									{	return(LOGICAL_OR);					}
 	","										{	return(COMMA);						}
+	"-"{NUMBER} 							{
+												printf("NUMBER=%s\n", yytext);
+												SET_YYLVAL(yytext); return(MINUS_INT_RETERAL);
+											}
 	{NUMBER} 								{
-												printf("NUMBER\n");
+												printf("NUMBER=%s\n", yytext);
 												SET_YYLVAL(yytext); return(INT_RETERAL);
 											}
+
 
 
 %{  /*****************************************************************************************************************************************************************

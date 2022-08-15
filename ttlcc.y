@@ -46,22 +46,27 @@ extern "C" int  yylex(void);
 %token<ctype> WHILE DO LOOP ENDWHILE 
 %token<ctype> FUNCTION ENDFUNCTION
 %token<ctype> BREAK CONTINUE RETRN 
-%token<ctype> INT STRING VOID STR_RETERAL INT_RETERAL
+%token<ctype> INT STRING VOID STR_RETERAL INT_RETERAL MINUS_INT_RETERAL
 %token<ctype> EQUAL BIT_NOT PLUS MINUS ASTA SLASH MOD LEFT_SHIFT RIGHT_SHIFT LEFT_SHIFT_LOGIC RIGHT_SHIFT_LOGIC COMMA
 %token<ctype> BIT_AND BIT_XOR BIT_OR GRATER_THAN_LEFT GRATER_THAN_RIGHT EQUAL_GRATER_THAN_LEFT EQUAL_GRATER_THAN_RIGHT
 %token<ctype> EQUAL_EQUAL LOGICAL_NOT NOT_EQUAL LOGICAL_AND LOGICAL_OR 
-%token<ctype> EXPR
 %token<ctype> TOKEN RESERVED_WORD
 %token<ctype> CR BRACE END_BRACE IMPORT
 /* 非終端記号 */
-%type<ctype> program codes var ifst forst functionst dowhilest retrnst breakst expr return_types args typest callst manytokenst functionnamest
+%type<ctype> program codes var ifst forst functionst dowhilest retrnst expr return_types args typest callst manytokenst functionnamest else_if_list
 
 %start program
 
+%right BIT_NOT EQUAL
+%left PLUS MINUS ASTA SLASH MOD
+%left LEFT_SHIFT RIGHT_SHIFT LEFT_SHIFT_LOGIC RIGHT_SHIFT_LOGIC
+%left EQUAL_EQUAL LOGICAL_NOT NOT_EQUAL LOGICAL_AND LOGICAL_OR
+%left BIT_AND BIT_XOR BIT_OR GRATER_THAN_LEFT GRATER_THAN_RIGHT EQUAL_GRATER_THAN_LEFT EQUAL_GRATER_THAN_RIGHT
+%glr-parser
 %%
 
 /* プログラムとはなんぞや */
-program		:	program program					{ 	
+program		:	program functionst				{ 	
 													output_to_file($1->token_str);
 													output_to_file($2->token_str);
 												}
@@ -174,32 +179,29 @@ args		:	args args						{ $$ = new t_token(*$1 + *$2); }
 			|	var								{ $$ = $1; }
 			;
 
-codes		:	codes codes						{ $$ = new t_token(*$1 + *$2); }	
-			|	var								{ $$ = $1; }
-			|	ifst							{ $$ = $1; }
-			|	forst							{ $$ = $1; }
-			|	dowhilest						{ $$ = $1; }
-			|	breakst							{ $$ = $1; }
-			|	CONTINUE						{
-													/* 暫定 */ 
-													t_token *ret = new t_token();;
-													ret->token_str = ":continue;\n";
-													$$ = ret; 
-												}
-			|	expr							{ $$ = $1; }
-			|	retrnst							{ $$ = $1; }
-			|	callst							{ $$ = $1; }
-			|	CR								{ $$ = $1; $$->token_str = "\n";}
+codes		:	var CR							{ $$ = $1; $$->token_str += "\n"; }
+			|	callst CR						{ $$ = $1; $$->token_str += "\n"; }
+			|	ifst							{ $$ = $1; $$->token_str += "\n"; }
+			|	forst							{ $$ = $1; $$->token_str += "\n"; }
+			|	dowhilest						{ $$ = $1; $$->token_str += "\n"; }
+			|	BREAK CR						{ $$ = new t_token(); $$->token_str = "break\n"; }
+			|	CONTINUE CR						{ $$ = new t_token(); $$->token_str = "continue\n";	}
+			|	retrnst CR						{ $$ = $1; $$->token_str += "\n"; }
+			|	expr CR							{ $$ = $1; $$->token_str += "\n"; }
+			|	codes var CR					{ $$ = new t_token(*$1 + *$2); $$->token_str += "\n"; }
+			|	codes callst CR					{ $$ = new t_token(*$1 + *$2); $$->token_str += "\n"; }
+			|	codes ifst						{ $$ = new t_token(*$1 + *$2); $$->token_str += "\n"; }
+			|	codes forst						{ $$ = new t_token(*$1 + *$2); $$->token_str += "\n"; }
+			|	codes dowhilest					{ $$ = new t_token(*$1 + *$2); $$->token_str += "\n"; }
+			|	codes BREAK CR					{ $$ = new t_token(*$1); $$->token_str = "break\n"; }
+			|	codes CONTINUE CR				{ $$ = new t_token(*$1); $$->token_str = "continue\n";	}
+			|	codes retrnst CR				{ $$ = new t_token(*$1 + *$2); $$->token_str += "\n"; }
+			|	codes expr CR					{ $$ = new t_token(*$1 + *$2); $$->token_str += "\n"; }
 			;
 
-forst		: FOR								{/* dummy */}
-dowhilest	: WHILE								{/* dummy */}
-
-/* 超暫定 */
-expr		: expr expr							{ $$ = new t_token(*$1 + *$2); }
-			| INT_RETERAL						{ $$ = $1; }
+expr		: INT_RETERAL						{ $$ = $1; }
 			| STR_RETERAL						{ $$ = $1; }
-			| MINUS INT_RETERAL					{ $$ = new t_token(); $$->token_str = "-" + $2->token_str; }
+			| MINUS_INT_RETERAL					{ $$ = $1; }
 			| BRACE expr END_BRACE				{ $$ = new t_token(); $$->token_str = "(" + $2->token_str + ")"; }
 			| expr PLUS expr					{ $$ = new t_token(); $$->token_str = $1->token_str + "+" + $3->token_str; }
 			| expr MINUS expr					{ $$ = new t_token(); $$->token_str = $1->token_str + "-" + $3->token_str; }
@@ -244,6 +246,16 @@ manytokenst	: manytokenst COMMA manytokenst					{ $$ = new t_token(); $$->token_
 			| STR_RETERAL									{ $$ = $1; }
 			;
 
+/* if文系の処理 */
+else_if_list: else_if_list else_if_list						{ $$ = new t_token(*$1 + *$2); }
+			| ELSE IF expr THEN codes						{
+																t_token *ret = new t_token();;
+																ret->token_str = 	"elseif (" + $3->token_str + ") then\n" 
+																					+ $5->token_str + "\n";
+																$$ = ret;
+															}
+			;
+
 ifst		: IF expr THEN codes ENDIF						{
 																t_token *ret = new t_token();;
 																ret->token_str = 	"if (" + $2->token_str + ") then\n" 
@@ -260,14 +272,27 @@ ifst		: IF expr THEN codes ENDIF						{
 																					+ "endif\n";
 																$$ = ret;
 															}
-			| IF expr THEN codes ELSE ifst					{
+			| IF expr THEN codes else_if_list ENDIF			{
 																t_token *ret = new t_token();;
 																ret->token_str = 	"if (" + $2->token_str + ") then\n" 
 																					+ $4->token_str + "\n"
-																					+ "else" + $6->token_str + "\n";
+																					+ $5->token_str + "\n"
+																					+ "endif\n";
 																$$ = ret;
 															}
+			| IF expr THEN codes else_if_list ELSE codes ENDIF	{
+																t_token *ret = new t_token();;
+																ret->token_str = 	"if (" + $2->token_str + ") then\n" 
+																					+ $4->token_str + "\n"
+																					+ $5->token_str + "\n"
+																					+ "else\n"
+																					+ $7->token_str + "\n"
+																					+ "endif\n";
+																$$ = ret;
+															}
+			;
 
+/* for文系の処理 */
 forst   :   FOR TOKEN EQUAL expr TO expr codes NEXT			{
 																t_token *ret = new t_token();
 																ret->token_str = 	"for " + $2->convert_name_to_local( get_function_name(), get_argument($2->token_str))
@@ -286,49 +311,39 @@ forst   :   FOR TOKEN EQUAL expr TO expr codes NEXT			{
 																					+ "endwhile\n";
 																$$ = ret;
 															}
-//		|	WHILE EXPR block					{
-//													t_token *ret = new t_token();;
-//													ret->token_str = 	"while (" + $2->token_str + ")\n" 
-//																		+ $1->get_format_comment() + "\n" 
-//																		+ $3->token_str + "\n"
-//																		+ "end while\n";
-//													ret->comment = "";	/* コメントは消しておく */
-//													$$ = ret;
-//												}
-//
-//dowhilest	: DO block WHILE EXPR			{
-//													t_token *ret = new t_token();;
-//													ret->token_str = 	"repeat\n"
-//																		+ $1->get_format_comment() + "\n" 
-//																		+ $2->token_str + "\n" 
-//																		+ "repeat while(" + $4->token_str + ")\n"
-//																		+ $3->get_format_comment() + "\n" ;
-//													ret->comment = "";	/* コメントは消しておく */
-//													$$ = ret;
-//											}
-//			;
+		;
 
-/* return */
-retrnst		:	RETRN EXPR		{
-									t_token *ret = new t_token();;
-									ret->token_str = 	":return " + $2->token_str + ";\n" 
-														+ $1->get_format_comment() + "\n"
-														+ "stop\n";
-									ret->comment = "";	/* コメントは消しておく */
-									$$ = ret;
-								}
-			|	RETRN			{ }
+/* while文系の処理 */
+dowhilest	: DO WHILE expr codes LOOP						{
+																t_token *ret = new t_token();
+																ret->token_str = 	"do while " + $3->token_str + "\n" 
+																					+ $4->token_str + "\n"
+																					+ "loop\n";
+																$$ = ret;
+											}
+			|	WHILE expr codes ENDWHILE					{
+																t_token *ret = new t_token();
+																ret->token_str = 	"while " + $2->token_str + "\n" 
+																					+ $3->token_str + "\n"
+																					+ "endwhile\n";
+																$$ = ret;
+															}
 			;
 
-/* break */
-breakst		:	BREAK			{ 
-									t_token *ret = new t_token();;
-										ret->token_str = ":break;\n"
-														+ $1->get_format_comment() + "\n"
-														+ "break\n";
-									ret->comment = "";	/* コメントは消しておく */
-									$$ = ret; 
+/* return */
+retrnst		:	RETRN expr		{
+									// 暫定。 TODO:複数 return に対応させる
+									t_token *ret = new t_token();
+									ret->token_str = "";
+									$$ = ret;
 								}
+			|	RETRN			{
+									// 暫定。 TODO:複数 return に対応させる
+									t_token *ret = new t_token();
+									ret->token_str = "";
+									$$ = ret;
+								}
+			;
 
 %%
 

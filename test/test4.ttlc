@@ -1,0 +1,24 @@
+func int main(void)
+    int i = 0;
+    /* 繰り返し処理 */
+    for i=0 to 10
+        // ループをスキップ
+        if i==5 then
+            continue;
+            // ループをスキップ
+        else if (i==7) then
+            continue;
+        endif
+        // 偶奇判定をして文字列を出力
+        test_func(i);
+    next
+	return 0;
+endfunc
+
+func void test_func(int x)
+        if ((x%2)==0) then
+    		messagebox(x, "偶数です");
+        else
+    		messagebox(x, "奇数です");
+        endif
+endfunc
