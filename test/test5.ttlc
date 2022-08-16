@@ -1,0 +1,18 @@
+// 文字列結合とかのテスト
+func int main(void)
+    int v = 1;
+    string name = "ttlcc";
+    name = "my name is " + name;
+    messagebox(name, "let me introduce myself.");
+    // 文字列と数値の結合
+    name = "now. my version is " + v;
+    messagebox(name, "Version.");
+    // 数値と文字列の結合
+    name = 33 + "-" + 4;
+    messagebox(name, "Nandeya!");
+    // 複数の文字列や数値の結合
+    name = ("abc" + (("de" + "f") + 111));
+    messagebox(name, "expect val: abcdef111");
+
+	return 0;
+endfunc

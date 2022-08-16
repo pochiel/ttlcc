@@ -14,15 +14,16 @@ public:
 	t_token();
 	t_token(const t_token &t);
 	std::string token_str;
-	std::string comment;
+	std::string preamble_str;		// 前置き文（次の結合時に先に結合する）
 	E_Types type;
-	std::string get_format_comment();
 	//  +演算子のオーバーロード
 	t_token operator+(const t_token& t2);
 	// ローカル変数であるかどうか
 	bool is_local;
 	std::string real_name;
-	void set_local_name(std::string name);
+	void set_local_name(t_token& token);
+	static t_token get_local_name(std::string name);
+	static t_token* string_concatenation(const t_token& t1, const t_token& t2);
 	static std::string str_to_hash(std::string name);
 	static std::string convert_name_to_local(std::string function_name, std::string realname);
 };

@@ -66,11 +66,14 @@ extern "C" int  yylex(void);
 %%
 
 /* ƒvƒƒOƒ‰ƒ€‚Æ‚Í‚È‚ñ‚¼‚â */
-program		:	program functionst				{ 	
-													output_to_file($1->token_str);
+program		:	program functionst				{
+													$$ = new t_token(*$1 + *$2); 
 													output_to_file($2->token_str);
 												}
-			|	functionst						{ $$ = $1; }
+			|	functionst						{
+													$$ = $1;
+													output_to_file($1->token_str);
+												}
 			;
 
 functionnamest	:	TOKEN						{ 
@@ -115,9 +118,10 @@ typest		:	INT								{ $$ = $1; }
 
 var			:	typest TOKEN					{
 													$$ = new t_token(*$2);
+													$$->type = $1->type;
 													// ƒ[ƒJƒ‹•Ï”–¼‚ÌÝ’è
 													if(get_function_name() != ""){
-														$$->set_local_name($$->token_str);
+														$$->set_local_name(*$$);
 													}
 													switch($1->type){
 														case TYPE_STRING:
@@ -136,9 +140,10 @@ var			:	typest TOKEN					{
 												}
 			|	typest TOKEN EQUAL INT_RETERAL	{
 													$$ = new t_token(*$2);
+													$$->type = $1->type;
 													// ƒ[ƒJƒ‹•Ï”–¼‚ÌÝ’è
 													if(get_function_name() != ""){
-														$$->set_local_name($$->token_str);
+														$$->set_local_name(*$$);
 													}
 													switch($1->type){
 														case TYPE_STRING:
@@ -157,10 +162,15 @@ var			:	typest TOKEN					{
 												}
 			|	typest TOKEN EQUAL STR_RETERAL	{
 													$$ = new t_token(*$2);
+													$$->type = $1->type;
+													// ƒ[ƒJƒ‹•Ï”–¼‚ÌÝ’è
+													if(get_function_name() != ""){
+														$$->set_local_name(*$$);
+													}
 													switch($1->type){
 														case TYPE_STRING:
 															// stringŒ^•Ï”‚ð‰Šú‰»
-															$$->token_str = $$->token_str + "='" + $4->token_str + "'\n";
+															$$->token_str = $$->token_str + "=" + $4->token_str + "\n";
 															break;
 														case TYPE_INT:
 															// •¶Žš—ñŒ^¨®”Œ^‚ÌˆÃ–Ù‚ÌŒ^ƒLƒƒƒXƒg‚Ís‚í‚ê‚È‚¢
@@ -199,26 +209,113 @@ codes		:	var CR							{ $$ = $1; $$->token_str += "\n"; }
 			|	codes expr CR					{ $$ = new t_token(*$1 + *$2); $$->token_str += "\n"; }
 			;
 
-expr		: INT_RETERAL						{ $$ = $1; }
-			| STR_RETERAL						{ $$ = $1; }
-			| MINUS_INT_RETERAL					{ $$ = $1; }
-			| BRACE expr END_BRACE				{ $$ = new t_token(); $$->token_str = "(" + $2->token_str + ")"; }
-			| expr PLUS expr					{ $$ = new t_token(); $$->token_str = $1->token_str + "+" + $3->token_str; }
-			| expr MINUS expr					{ $$ = new t_token(); $$->token_str = $1->token_str + "-" + $3->token_str; }
-			| expr ASTA expr					{ $$ = new t_token(); $$->token_str = $1->token_str + "*" + $3->token_str; }
-			| expr SLASH expr					{ $$ = new t_token(); $$->token_str = $1->token_str + "/" + $3->token_str; }
-			| expr MOD expr						{ $$ = new t_token(); $$->token_str = $1->token_str + "%" + $3->token_str; }
-			| expr EQUAL expr					{ $$ = new t_token(); $$->token_str = $1->token_str + "=" + $3->token_str; }
+expr		: INT_RETERAL						{ $$ = $1; $$->type = TYPE_INT; }
+			| STR_RETERAL						{ $$ = $1; $$->type = TYPE_STRING; }
+			| MINUS_INT_RETERAL					{ $$ = $1; $$->type = TYPE_INT; }
+			| BRACE expr END_BRACE				{ $$ = new t_token(*$2); $$->token_str = "(" + $2->token_str + ")"; }
+			| expr PLUS expr					{ 
+													if( ($1->type == TYPE_STRING) || ($3->type == TYPE_STRING) ){
+														// ‚Ç‚¿‚ç‚©‚ª•¶Žš—ñŒ^‚È‚ç•¶Žš—ñŒ‹‡
+														$$ = t_token::string_concatenation(*$1, *$3);
+														printf(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n");
+														printf("$1->preamble_str:%s\n", $1->preamble_str.c_str());
+														printf("$3->preamble_str:%s\n", $3->preamble_str.c_str());
+														printf("$$->preamble_str:%s\n", $$->preamble_str.c_str());
+														printf(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n");
+													} else {
+														// ‚»‚¤‚Å‚È‚¯‚ê‚Î”’l‰ÁŽZ
+														$$ = new t_token();
+														$$->type = TYPE_INT;
+														$$->token_str = $1->token_str + "+" + $3->token_str;
+													}
+												}
+			| expr MINUS expr					{
+													if( ($1->type == TYPE_STRING) || ($2->type == TYPE_STRING) ) {
+														yyerror("[ERROR] Can not do this kind of math with strings.\n");
+													}
+													$$ = new t_token(); $$->token_str = $1->token_str + "-" + $3->token_str;
+												}
+			| expr ASTA expr					{
+													if( ($1->type == TYPE_STRING) || ($2->type == TYPE_STRING) ) {
+														yyerror("[ERROR] Can not do this kind of math with strings.\n");
+													}
+													$$ = new t_token(); $$->token_str = $1->token_str + "*" + $3->token_str;
+												}
+			| expr SLASH expr					{
+													if( ($1->type == TYPE_STRING) || ($2->type == TYPE_STRING) ) {
+														yyerror("[ERROR] Can not do this kind of math with strings.\n");
+													}
+													$$ = new t_token(); $$->token_str = $1->token_str + "/" + $3->token_str;
+												}
+			| expr MOD expr						{
+													if( ($1->type == TYPE_STRING) || ($2->type == TYPE_STRING) ) {
+														yyerror("[ERROR] Can not do this kind of math with strings.\n");
+													}
+													$$ = new t_token(); $$->token_str = $1->token_str + "%" + $3->token_str;
+												}
+			| expr EQUAL expr					{
+													$$ = new t_token();
+													// ‘O’u‚«•¶‚ª‚ ‚é‚È‚ç‚Î‚»‚ê‚ðæ‚ÉŒ‹‡‚·‚é
+													if($3->preamble_str != ""){
+														$$->token_str = $3->preamble_str;
+													}
+													$$->token_str += $1->token_str + "=" + $3->token_str;
+												}
 			// ˜_—‰‰ŽZŒn
-			| expr EQUAL_EQUAL expr				{ $$ = new t_token(); $$->token_str = $1->token_str + "==" + $3->token_str; }
-			| expr NOT_EQUAL expr				{ $$ = new t_token(); $$->token_str = $1->token_str + "<>" + $3->token_str; }
-			| expr LOGICAL_NOT					{ $$ = new t_token(); $$->token_str = "!" + $1->token_str; 					}
-			| expr LOGICAL_AND expr				{ $$ = new t_token(); $$->token_str = $1->token_str + "&&" + $3->token_str; }
-			| expr LOGICAL_OR expr				{ $$ = new t_token(); $$->token_str = $1->token_str + "||" + $3->token_str; }
-			| expr GRATER_THAN_LEFT expr		{ $$ = new t_token(); $$->token_str = $1->token_str + "<" + $3->token_str; }
-			| expr GRATER_THAN_RIGHT expr		{ $$ = new t_token(); $$->token_str = $1->token_str + ">" + $3->token_str; }
-			| expr EQUAL_GRATER_THAN_LEFT expr	{ $$ = new t_token(); $$->token_str = $1->token_str + "=<" + $3->token_str; }
-			| expr EQUAL_GRATER_THAN_RIGHT expr	{ $$ = new t_token(); $$->token_str = $1->token_str + "=>" + $3->token_str; }
+			| expr EQUAL_EQUAL expr				{
+													if( ($1->type == TYPE_STRING) || ($2->type == TYPE_STRING) ) {
+														yyerror("[ERROR] Can not do this kind of math with strings.\n");
+													}
+													$$ = new t_token(); $$->token_str = $1->token_str + "==" + $3->token_str;
+												}
+			| expr NOT_EQUAL expr				{
+													if( ($1->type == TYPE_STRING) || ($2->type == TYPE_STRING) ) {
+														yyerror("[ERROR] Can not do this kind of math with strings.\n");
+													}
+													$$ = new t_token(); $$->token_str = $1->token_str + "<>" + $3->token_str;
+												}
+			| expr LOGICAL_NOT					{
+													if( ($1->type == TYPE_STRING) || ($2->type == TYPE_STRING) ) {
+														yyerror("[ERROR] Can not do this kind of math with strings.\n");
+													}
+													$$ = new t_token(); $$->token_str = "!" + $1->token_str; 				
+												}
+			| expr LOGICAL_AND expr				{
+													if( ($1->type == TYPE_STRING) || ($2->type == TYPE_STRING) ) {
+														yyerror("[ERROR] Can not do this kind of math with strings.\n");
+													}
+													$$ = new t_token(); $$->token_str = $1->token_str + "&&" + $3->token_str;
+												}
+			| expr LOGICAL_OR expr				{
+													if( ($1->type == TYPE_STRING) || ($2->type == TYPE_STRING) ) {
+														yyerror("[ERROR] Can not do this kind of math with strings.\n");
+													}
+													$$ = new t_token(); $$->token_str = $1->token_str + "||" + $3->token_str;
+												}
+			| expr GRATER_THAN_LEFT expr		{
+													if( ($1->type == TYPE_STRING) || ($2->type == TYPE_STRING) ) {
+														yyerror("[ERROR] Can not do this kind of math with strings.\n");
+													}
+													$$ = new t_token(); $$->token_str = $1->token_str + "<" + $3->token_str;
+												}
+			| expr GRATER_THAN_RIGHT expr		{
+													if( ($1->type == TYPE_STRING) || ($2->type == TYPE_STRING) ) {
+														yyerror("[ERROR] Can not do this kind of math with strings.\n");
+													}
+													$$ = new t_token(); $$->token_str = $1->token_str + ">" + $3->token_str;
+												}
+			| expr EQUAL_GRATER_THAN_LEFT expr	{
+													if( ($1->type == TYPE_STRING) || ($2->type == TYPE_STRING) ) {
+														yyerror("[ERROR] Can not do this kind of math with strings.\n");
+													}
+													$$ = new t_token(); $$->token_str = $1->token_str + "=<" + $3->token_str;
+												}
+			| expr EQUAL_GRATER_THAN_RIGHT expr	{
+													if( ($1->type == TYPE_STRING) || ($2->type == TYPE_STRING) ) {
+														yyerror("[ERROR] Can not do this kind of math with strings.\n");
+													}
+													$$ = new t_token(); $$->token_str = $1->token_str + "=>" + $3->token_str;
+												}
 			// ƒrƒbƒg‰‰ŽZŒn
 			| BIT_NOT expr						{ $$ = new t_token(); $$->token_str = "~" + $1->token_str; }
 			| expr LEFT_SHIFT expr				{ $$ = new t_token(); $$->token_str = $1->token_str + "<<" + $3->token_str; }
@@ -228,7 +325,7 @@ expr		: INT_RETERAL						{ $$ = $1; }
 			| expr BIT_AND expr					{ $$ = new t_token(); $$->token_str = $1->token_str + "&" + $3->token_str; }
 			| expr BIT_OR expr					{ $$ = new t_token(); $$->token_str = $1->token_str + "|" + $3->token_str; }
 			| expr BIT_XOR expr					{ $$ = new t_token(); $$->token_str = $1->token_str + "|" + $3->token_str; }
-			| TOKEN								{ $$ = $1; $$->token_str = $$->convert_name_to_local( get_function_name(), get_argument($$->token_str)) ; }
+			| TOKEN								{ $$ = new t_token( t_token::get_local_name($1->token_str) ); }
 			;
 
 /* ŠÖ”ŒÄ‚Ño‚µ */
@@ -241,7 +338,7 @@ callst		: TOKEN BRACE manytokenst END_BRACE 			{
 			;
 
 manytokenst	: manytokenst COMMA manytokenst					{ $$ = new t_token(); $$->token_str = $1->token_str + " " + $3->token_str; }
-			| TOKEN											{ $$ = $1; $$->token_str = $$->convert_name_to_local( get_function_name(), get_argument($$->token_str)) ; }
+			| TOKEN											{ $$ = new t_token( t_token::get_local_name($1->token_str) ); }
 			| INT_RETERAL									{ $$ = $1; }
 			| STR_RETERAL									{ $$ = $1; }
 			;
