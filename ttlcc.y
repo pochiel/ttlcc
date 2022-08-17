@@ -8,6 +8,7 @@
 #include <regex>
 #include "parser.hpp"
 #include "function.hpp"
+#include "common.hpp"
 
 void output_to_file(std::string &);
 void get_comment(std::string &buf);
@@ -52,8 +53,9 @@ extern "C" int  yylex(void);
 %token<ctype> EQUAL_EQUAL LOGICAL_NOT NOT_EQUAL LOGICAL_AND LOGICAL_OR 
 %token<ctype> TOKEN RESERVED_WORD
 %token<ctype> CR BRACE END_BRACE IMPORT
+%token<ctype> LEFT_INDEX_BRACKET RIGHT_INDEX_BRACKET
 /* 非終端記号 */
-%type<ctype> program codes var ifst forst functionst dowhilest retrnst expr return_types args typest callst manytokenst functionnamest else_if_list
+%type<ctype> program codes var ifst forst functionst dowhilest retrnst expr return_types args typest callst manytokenst functionnamest else_if_list initialize_intval_st initialize_strval_st
 
 %start program
 
@@ -116,6 +118,20 @@ typest		:	INT								{ $$ = $1; }
 			|	VOID							{ $$ = $1; }
 			;
 
+initialize_intval_st	:	initialize_intval_st COMMA INT_RETERAL	{
+																		$$ = new t_token();
+																		$$->token_str = $1->token_str + " " + $3->token_str;
+																	}
+						|	INT_RETERAL								{ $$ = $1; }
+						;
+
+initialize_strval_st	:	initialize_strval_st COMMA STR_RETERAL	{
+																		$$ = new t_token();
+																		$$->token_str = $1->token_str + " " + $3->token_str;
+																	}
+						|	STR_RETERAL								{ $$ = $1; }
+						;
+
 var			:	typest TOKEN					{
 													$$ = new t_token(*$2);
 													$$->type = $1->type;
@@ -158,6 +174,62 @@ var			:	typest TOKEN					{
 														default:
 															yyerror("[ERROR] A void type variable cannot be created.\n");
 															break;
+													}
+												}
+			// 整数配列（初期化なし）
+			|	INT TOKEN LEFT_INDEX_BRACKET INT_RETERAL RIGHT_INDEX_BRACKET	{
+													$$ = new t_token(*$2);
+													$$->type = TYPE_INT_ARRAY;
+													// ローカル変数名の設定
+													if(get_function_name() != ""){
+														$$->set_local_name(*$$);
+													}
+													$$->token_str = "intdim " + $$->token_str + " " + $5->token_str + "\n";
+												}
+			// 文字列配列（初期化なし）
+			|	STRING TOKEN LEFT_INDEX_BRACKET INT_RETERAL RIGHT_INDEX_BRACKET	{
+													$$ = new t_token(*$2);
+													$$->type = TYPE_STRING_ARRAY;
+													// ローカル変数名の設定
+													if(get_function_name() != ""){
+														$$->set_local_name(*$$);
+													}
+													$$->token_str = "strdim " + $$->token_str + " " + $5->token_str + "\n";
+												}
+			// 整数配列（初期化あり）
+			|	INT TOKEN LEFT_INDEX_BRACKET INT_RETERAL RIGHT_INDEX_BRACKET EQUAL initialize_intval_st {
+													std::vector<std::string> initialize_list = common_utl::split($7->token_str, ' ');
+													$$ = new t_token(*$2);
+													$$->type = TYPE_INT_ARRAY;
+													// ローカル変数名の設定
+													if(get_function_name() != ""){
+														$$->set_local_name(*$$);
+													}
+													std::string local_name = $$->token_str;
+													$$->token_str = "intdim " + local_name + " " + $5->token_str + "\n";
+													// 初期化処理の追加
+													int i=0;
+													for(std::string x : initialize_list){
+														$$->token_str += local_name + "[" + std::to_string(i) + "]=" + x + "\n";
+														i++;
+													}
+												}
+			// 文字列配列（初期化あり）
+			|	STRING TOKEN LEFT_INDEX_BRACKET INT_RETERAL RIGHT_INDEX_BRACKET EQUAL initialize_strval_st	{
+													std::vector<std::string> initialize_list = common_utl::split($7->token_str, ' ');
+													$$ = new t_token(*$2);
+													$$->type = TYPE_INT_ARRAY;
+													// ローカル変数名の設定
+													if(get_function_name() != ""){
+														$$->set_local_name(*$$);
+													}
+													std::string local_name = $$->token_str;
+													$$->token_str = "strdim " + local_name + " " + $5->token_str + "\n";
+													// 初期化処理の追加
+													int i=0;
+													for(std::string x : initialize_list){
+														$$->token_str += local_name + "[" + std::to_string(i) + "]=" + x + "\n";
+														i++;
 													}
 												}
 			|	typest TOKEN EQUAL STR_RETERAL	{
@@ -217,11 +289,6 @@ expr		: INT_RETERAL						{ $$ = $1; $$->type = TYPE_INT; }
 													if( ($1->type == TYPE_STRING) || ($3->type == TYPE_STRING) ){
 														// どちらかが文字列型なら文字列結合
 														$$ = t_token::string_concatenation(*$1, *$3);
-														printf(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n");
-														printf("$1->preamble_str:%s\n", $1->preamble_str.c_str());
-														printf("$3->preamble_str:%s\n", $3->preamble_str.c_str());
-														printf("$$->preamble_str:%s\n", $$->preamble_str.c_str());
-														printf(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n");
 													} else {
 														// そうでなければ数値加算
 														$$ = new t_token();
@@ -326,6 +393,26 @@ expr		: INT_RETERAL						{ $$ = $1; $$->type = TYPE_INT; }
 			| expr BIT_OR expr					{ $$ = new t_token(); $$->token_str = $1->token_str + "|" + $3->token_str; }
 			| expr BIT_XOR expr					{ $$ = new t_token(); $$->token_str = $1->token_str + "|" + $3->token_str; }
 			| TOKEN								{ $$ = new t_token( t_token::get_local_name($1->token_str) ); }
+			// 配列の処理
+			| TOKEN	LEFT_INDEX_BRACKET expr RIGHT_INDEX_BRACKET	{
+														// int型以外を配列 index に指定したらあかん
+														if($3->type != TYPE_INT){
+															yyerror("[ERROR] Array index only use integer.\n");
+														}
+														$$ = new t_token( t_token::get_local_name($1->token_str) );
+														$$->token_str += "[" + $3->token_str + "]";
+														switch($$->type){
+															case TYPE_INT_ARRAY:
+																$$->type = TYPE_INT;
+																break;
+															case TYPE_STRING_ARRAY:
+																$$->type = TYPE_STRING;
+																break;
+															default:
+																yyerror("[ERROR] Indexed access to non-array variables.\n");
+																break;
+														}
+													}
 			;
 
 /* 関数呼び出し */
@@ -341,6 +428,7 @@ manytokenst	: manytokenst COMMA manytokenst					{ $$ = new t_token(); $$->token_
 			| TOKEN											{ $$ = new t_token( t_token::get_local_name($1->token_str) ); }
 			| INT_RETERAL									{ $$ = $1; }
 			| STR_RETERAL									{ $$ = $1; }
+			| TOKEN	LEFT_INDEX_BRACKET expr RIGHT_INDEX_BRACKET	{ $$ = new t_token( t_token::get_local_name($1->token_str) ); $$->token_str += "[" + $3->token_str + "]"; }
 			;
 
 /* if文系の処理 */

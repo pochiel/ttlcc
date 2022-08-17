@@ -139,6 +139,8 @@ NUMBER   {integer}
 	"&&"									{	return(LOGICAL_AND);				}
 	"||"									{	return(LOGICAL_OR);					}
 	","										{	return(COMMA);						}
+	"["										{	return(LEFT_INDEX_BRACKET);			}
+	"]"										{	return(RIGHT_INDEX_BRACKET);		}
 	"-"{NUMBER} 							{
 												printf("NUMBER=%s\n", yytext);
 												SET_YYLVAL(yytext); return(MINUS_INT_RETERAL);

@@ -5,6 +5,7 @@ exports=-I./sub_module/libmpegts/crc/
 target_srcs=./sub_module/libmpegts/crc/crc.c
 target_srcs+=./t_token.cpp 
 target_srcs+=./function.cpp 
+target_srcs+=./common.cpp 
 
 all:
 ifeq ($(debugout), 1)

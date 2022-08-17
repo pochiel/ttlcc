@@ -7,6 +7,8 @@ typedef enum {
 	TYPE_STRING,
 	TYPE_VOID,
 	TYPE_FUNCTION,
+	TYPE_INT_ARRAY,
+	TYPE_STRING_ARRAY,
 } E_Types;
 
 class t_token {

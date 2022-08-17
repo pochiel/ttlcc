@@ -5,6 +5,7 @@
 #include <map>
 #include "t_token.hpp"
 #include "function.hpp"
+#include "common.hpp"
 
 static std::string current_function_name("");
 static std::string current_function_args("");
@@ -49,21 +50,8 @@ std::string set_output_param(t_token & param) {
 	return param.token_str;
 }
 
-// 	https://qiita.com/iseki-masaya/items/70b4ee6e0877d12dafa8
-std::vector<std::string> split(const std::string &s, char delim) {
-    std::vector<std::string> elems;
-    std::stringstream ss(s);
-    std::string item;
-    while (std::getline(ss, item, delim)) {
-    if (!item.empty()) {
-            elems.push_back(item);
-        }
-    }
-    return elems;
-}
-
 std::string initialize_arg(std::string & function_name, std::string & args) {
-	std::vector<std::string> arg_array = split(args, ',');
+	std::vector<std::string> arg_array = common_utl::split(args, ',');
     std::string ret = "";
     int arg_cnt = 0;
     std::cout << function_name << "  :xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx:  " << args <<"\n";
