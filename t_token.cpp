@@ -4,25 +4,16 @@
 #include <sstream>
 #include <iomanip>
 #include <map>
-#include "crc.h"
+#include "variable_manager.hpp"
 
 	extern "C" void yyerror(const char* s);
-
-	// シンボルテーブル
-	static std::map<std::string, t_token> var_symbol_tbl;
-
-	// 文字列をハッシュ値に変えてくれる便利関数（そのうち場所移動するかも）
-	std::string t_token::str_to_hash(std::string name) {
-		std::ostringstream ss;
-		ss << std::setfill('0') << std::setw(8) << std::hex << crc_32((uint8_t*)name.c_str(), name.length());
-		return ss.str();
-	}
 
 	t_token::t_token(){
 		token_str = "";
 		is_local = false;
 		real_name="";
 		preamble_str="";
+		next_token = NULL;
 	}
 	t_token::t_token(const t_token &t){
 		token_str = t.token_str;
@@ -30,38 +21,18 @@
 		is_local = false;
 		real_name="";
 		preamble_str=t.preamble_str;
-	}
-	// 当該トークンはローカル変数であると教える
-	void t_token::set_local_name(t_token& token) {
-		std::string simple_name = set_argument(token.token_str);		// 引数名を登録し、実効引数名を取得する
-		is_local = true;
-		real_name = token_str;
-		token_str = convert_name_to_local(get_function_name(), simple_name);
-		var_symbol_tbl[token_str] = token;
+		next_token = NULL;
 	}
 
 	// 登録済みの変数を取得する
 	t_token t_token::get_local_name(std::string name) {
-		t_token ret = var_symbol_tbl[convert_name_to_local(get_function_name(), get_argument(name))];
+		t_token ret = variable_manager::get_instance()->get_symbol_table(variable_manager::convert_name_to_local(function_manager::get_instance()->get_function_name(), function_manager::get_instance()->get_argument(name)));
 		printf("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n");
 		printf("name:%s\n", name.c_str());
-		printf("funcname:%s\n", get_function_name().c_str());
+		printf("funcname:%s\n", function_manager::get_instance()->get_function_name().c_str());
 		printf("ret->token_str:%s\n", ret.token_str.c_str());
 		printf("ret->type:%d\n", ret.type);
 		printf("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n");
-		return ret;
-	}
-
-	// トークン名を実名からローカル名に変更する
-	std::string t_token::convert_name_to_local(std::string function_name, std::string realname) {
-		// ローカル変数名 = lo CRC32ハッシュ(16進8桁)[関数名+変数名][関数名10文字][変数名10文字]
-		std::string temp = (function_name + realname);
-		std::string ret  = "lo" + str_to_hash(temp)
-								+ function_name.substr(0,10)
-								+ realname.substr(0,10);
-		std::cout << "temp: " << temp << "\n";
-		std::cout << "realname: " << realname << "\n";
-		std::cout << "localname: " << ret << "\n";
 		return ret;
 	}
 
@@ -78,20 +49,21 @@
 		string temp = "";
 		temp = ("abc" + (("de" + "f") + 111));
 	上記を実現するには・・・
-		loXXXXXXXXmainarg1=""
-		sprintf "%s%s" "de" "f"				 (1)
-		sprintf "%s%d" inputstr 111			 (2)
-		sprintf "%s%s" "abc" inputstr		 (3)
-		loXXXXXXXXmainarg1=inputstr
+	messagebox(("abc"+("de"+"f")), "ghijkl");	// messagebox("abcdef", "ghijkl");	と同じ結果になってほしい
+	上記を実現するには・・・
+		sprintf "%s%s" "de" "f"				(1)
+		テンポラリ変数1=inputstr				
+		sprintf "%s%s" "abc" テンポラリ変数1 (2)
+		テンポラリ変数2=inputstr
+		messagebox テンポラリ変数2 "ghijkl"
 	となってほしい。
-	(1) は単純に 「sprintf "%s%s" 」 $1->token_str $3->token_str を結合すれば良いが
-	(2) では $1->token_str に inputstr が入っていてほしい。 ので、(1)の結果をどこかに退避しておき
-		(2) を生成するときに先に (1) を結合してから
-	(2) を結合する、みたいなことがしたい。　(3)でも同様にしたい。　そのために t_token に preamble_str（前置き文）っつうメンバを作った。
+	そのために t_token に preamble_str（前置き文）っつうメンバを作った。
 	*/
 	// というわけで、t_token ２つを結合して 前置き文をもっている t_token を生成する関数
 	t_token* t_token::string_concatenation(const t_token& t1, const t_token& t2) {
 		t_token * ret = new t_token();
+		const temp_val &temp = variable_manager::get_instance()->lend_temporary_variable();
+
 		ret->preamble_str = t1.preamble_str + "\n" + t2.preamble_str;
 		if( (t1.type == TYPE_STRING) && (t2.type == TYPE_STRING) ) {
 			ret->preamble_str += "sprintf \"%s%s\" " + t1.token_str + " " + t2.token_str + "\n";
@@ -102,8 +74,11 @@
 		} else {
 			yyerror("[ERROR] Internal error. string concatenation type missmatch.\n");
 		}
-		ret->token_str = "inputstr";
+		ret->preamble_str += temp.name + "=inputstr\n";
+		ret->token_str = temp.name;
 		ret->type = TYPE_STRING;
+		std::cout << "preamble:" << ret->preamble_str << "\n";
+		std::cout << "token_str:" << ret->token_str << "\n";
 		return ret;
 	}
 

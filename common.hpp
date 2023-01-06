@@ -7,6 +7,8 @@
 class common_utl {
     public:
     static std::vector<std::string> split(const std::string &s, char delim);
+    static std::string str_to_hash(std::string name);
+
 }; 
 
 #endif //__COMMON_HPP__

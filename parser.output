@@ -1,0 +1,4295 @@
+Nonterminals useless in grammar
+
+    prototypest
+
+
+Terminals unused in grammar
+
+    ELSEIF
+    IMPORT
+    EXTERN
+
+
+Rules useless in grammar
+
+   95 prototypest: EXTERN return_types functionnamest BRACE args END_BRACE
+
+
+State 28 conflicts: 1 shift/reduce
+State 29 conflicts: 1 shift/reduce
+State 50 conflicts: 1 shift/reduce
+State 185 conflicts: 1 shift/reduce
+State 206 conflicts: 2 shift/reduce
+
+
+Grammar
+
+    0 $accept: program $end
+
+    1 program: program functionst
+    2        | functionst
+
+    3 functionnamest: TOKEN
+
+    4 functionst: FUNCTION return_types functionnamest BRACE args END_BRACE codes ENDFUNCTION
+
+    5 return_types: return_types typest
+    6             | typest
+
+    7 typest: INT
+    8       | STRING
+    9       | VOID
+
+   10 initialize_intval_st: initialize_intval_st COMMA INT_RETERAL
+   11                     | INT_RETERAL
+
+   12 initialize_strval_st: initialize_strval_st COMMA STR_RETERAL
+   13                     | STR_RETERAL
+
+   14 var: typest TOKEN
+   15    | typest TOKEN EQUAL INT_RETERAL
+   16    | INT TOKEN LEFT_INDEX_BRACKET INT_RETERAL RIGHT_INDEX_BRACKET
+   17    | STRING TOKEN LEFT_INDEX_BRACKET INT_RETERAL RIGHT_INDEX_BRACKET
+   18    | INT TOKEN LEFT_INDEX_BRACKET INT_RETERAL RIGHT_INDEX_BRACKET EQUAL LEFT_INDEX_BRACKET initialize_intval_st RIGHT_INDEX_BRACKET
+   19    | STRING TOKEN LEFT_INDEX_BRACKET INT_RETERAL RIGHT_INDEX_BRACKET EQUAL LEFT_INDEX_BRACKET initialize_strval_st RIGHT_INDEX_BRACKET
+   20    | typest TOKEN EQUAL STR_RETERAL
+   21    | VOID
+
+   22 args: args COMMA typest TOKEN
+   23     | typest TOKEN
+
+   24 codes: var CR
+   25      | callst CR
+   26      | array_reteral EQUAL callst CR
+   27      | ifst
+   28      | forst
+   29      | dowhilest
+   30      | BREAK CR
+   31      | CONTINUE CR
+   32      | retrnst CR
+   33      | expr CR
+   34      | codes var CR
+   35      | codes callst CR
+   36      | codes array_reteral EQUAL callst CR
+   37      | codes ifst
+   38      | codes forst
+   39      | codes dowhilest
+   40      | codes BREAK CR
+   41      | codes CONTINUE CR
+   42      | codes retrnst CR
+   43      | codes expr CR
+
+   44 accessable_var: TOKEN
+   45               | TOKEN LEFT_INDEX_BRACKET expr RIGHT_INDEX_BRACKET
+
+   46 return_vars: return_vars COMMA accessable_var
+   47            | accessable_var
+
+   48 array_reteral: LEFT_INDEX_BRACKET return_vars RIGHT_INDEX_BRACKET
+
+   49 expr: INT_RETERAL
+   50     | STR_RETERAL
+   51     | MINUS_INT_RETERAL
+   52     | BRACE expr END_BRACE
+   53     | expr PLUS expr
+   54     | expr MINUS expr
+   55     | expr ASTA expr
+   56     | expr SLASH expr
+   57     | expr MOD expr
+   58     | expr EQUAL expr
+   59     | expr EQUAL_EQUAL expr
+   60     | expr NOT_EQUAL expr
+   61     | expr LOGICAL_NOT
+   62     | expr LOGICAL_AND expr
+   63     | expr LOGICAL_OR expr
+   64     | expr GRATER_THAN_LEFT expr
+   65     | expr GRATER_THAN_RIGHT expr
+   66     | expr EQUAL_GRATER_THAN_LEFT expr
+   67     | expr EQUAL_GRATER_THAN_RIGHT expr
+   68     | BIT_NOT expr
+   69     | expr LEFT_SHIFT expr
+   70     | expr RIGHT_SHIFT expr
+   71     | expr LEFT_SHIFT_LOGIC expr
+   72     | expr RIGHT_SHIFT_LOGIC expr
+   73     | expr BIT_AND expr
+   74     | expr BIT_OR expr
+   75     | expr BIT_XOR expr
+   76     | TOKEN
+   77     | TOKEN LEFT_INDEX_BRACKET expr RIGHT_INDEX_BRACKET
+
+   78 callst: TOKEN BRACE manytokenst END_BRACE
+   79       | RESERVED_WORD BRACE manytokenst END_BRACE
+
+   80 manytokenst: manytokenst COMMA expr
+   81            | expr
+
+   82 else_if_list: else_if_list else_if_list
+   83             | ELSE IF expr THEN codes
+
+   84 ifst: IF expr THEN codes ENDIF
+   85     | IF expr THEN codes ELSE codes ENDIF
+   86     | IF expr THEN codes else_if_list ENDIF
+   87     | IF expr THEN codes else_if_list ELSE codes ENDIF
+
+   88 forst: FOR TOKEN EQUAL expr TO expr codes NEXT
+   89      | FOR TOKEN EQUAL expr TO expr STEP expr codes NEXT
+
+   90 dowhilest: DO WHILE expr codes LOOP
+   91          | WHILE expr codes ENDWHILE
+
+   92 retrnst: RETRN expr
+   93        | RETRN LEFT_INDEX_BRACKET manytokenst RIGHT_INDEX_BRACKET
+   94        | RETRN
+
+
+Terminals, with rules where they appear
+
+    $end (0) 0
+    error (256)
+    IF <ctype> (258) 83 84 85 86 87
+    ELSE <ctype> (259) 83 85 87
+    ELSEIF <ctype> (260)
+    THEN <ctype> (261) 83 84 85 86 87
+    ENDIF <ctype> (262) 84 85 86 87
+    FOR <ctype> (263) 88 89
+    TO <ctype> (264) 88 89
+    STEP <ctype> (265) 89
+    NEXT <ctype> (266) 88 89
+    WHILE <ctype> (267) 90 91
+    DO <ctype> (268) 90
+    LOOP <ctype> (269) 90
+    ENDWHILE <ctype> (270) 91
+    FUNCTION <ctype> (271) 4
+    ENDFUNCTION <ctype> (272) 4
+    BREAK <ctype> (273) 30 40
+    CONTINUE <ctype> (274) 31 41
+    RETRN <ctype> (275) 92 93 94
+    INT <ctype> (276) 7 16 18
+    STRING <ctype> (277) 8 17 19
+    VOID <ctype> (278) 9 21
+    STR_RETERAL <ctype> (279) 12 13 20 50
+    INT_RETERAL <ctype> (280) 10 11 15 16 17 18 19 49
+    MINUS_INT_RETERAL <ctype> (281) 51
+    EQUAL <ctype> (282) 15 18 19 20 26 36 58 88 89
+    BIT_NOT <ctype> (283) 68
+    PLUS <ctype> (284) 53
+    MINUS <ctype> (285) 54
+    ASTA <ctype> (286) 55
+    SLASH <ctype> (287) 56
+    MOD <ctype> (288) 57
+    LEFT_SHIFT <ctype> (289) 69
+    RIGHT_SHIFT <ctype> (290) 70
+    LEFT_SHIFT_LOGIC <ctype> (291) 71
+    RIGHT_SHIFT_LOGIC <ctype> (292) 72
+    COMMA <ctype> (293) 10 12 22 46 80
+    BIT_AND <ctype> (294) 73
+    BIT_XOR <ctype> (295) 75
+    BIT_OR <ctype> (296) 74
+    GRATER_THAN_LEFT <ctype> (297) 64
+    GRATER_THAN_RIGHT <ctype> (298) 65
+    EQUAL_GRATER_THAN_LEFT <ctype> (299) 66
+    EQUAL_GRATER_THAN_RIGHT <ctype> (300) 67
+    EQUAL_EQUAL <ctype> (301) 59
+    LOGICAL_NOT <ctype> (302) 61
+    NOT_EQUAL <ctype> (303) 60
+    LOGICAL_AND <ctype> (304) 62
+    LOGICAL_OR <ctype> (305) 63
+    TOKEN <ctype> (306) 3 14 15 16 17 18 19 20 22 23 44 45 76 77 78 88 89
+    RESERVED_WORD <ctype> (307) 79
+    CR <ctype> (308) 24 25 26 30 31 32 33 34 35 36 40 41 42 43
+    BRACE <ctype> (309) 4 52 78 79
+    END_BRACE <ctype> (310) 4 52 78 79
+    IMPORT <ctype> (311)
+    LEFT_INDEX_BRACKET <ctype> (312) 16 17 18 19 45 48 77 93
+    RIGHT_INDEX_BRACKET <ctype> (313) 16 17 18 19 45 48 77 93
+    EXTERN <ctype> (314)
+
+
+Nonterminals, with rules where they appear
+
+    $accept (60)
+        on left: 0
+    program <ctype> (61)
+        on left: 1 2
+        on right: 0 1
+    functionnamest <ctype> (62)
+        on left: 3
+        on right: 4
+    functionst <ctype> (63)
+        on left: 4
+        on right: 1 2
+    return_types <ctype> (64)
+        on left: 5 6
+        on right: 4 5
+    typest <ctype> (65)
+        on left: 7 8 9
+        on right: 5 6 14 15 20 22 23
+    initialize_intval_st <ctype> (66)
+        on left: 10 11
+        on right: 10 18
+    initialize_strval_st <ctype> (67)
+        on left: 12 13
+        on right: 12 19
+    var <ctype> (68)
+        on left: 14 15 16 17 18 19 20 21
+        on right: 24 34
+    args <ctype> (69)
+        on left: 22 23
+        on right: 4 22
+    codes <ctype> (70)
+        on left: 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43
+        on right: 4 34 35 36 37 38 39 40 41 42 43 83 84 85 86 87 88 89 90 91
+    accessable_var <ctype> (71)
+        on left: 44 45
+        on right: 46 47
+    return_vars <ctype> (72)
+        on left: 46 47
+        on right: 46 48
+    array_reteral <ctype> (73)
+        on left: 48
+        on right: 26 36
+    expr <ctype> (74)
+        on left: 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 72 73 74 75 76 77
+        on right: 33 43 45 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 72 73 74 75 77 80 81 83 84 85 86 87 88 89 90 91 92
+    callst <ctype> (75)
+        on left: 78 79
+        on right: 25 26 35 36
+    manytokenst <ctype> (76)
+        on left: 80 81
+        on right: 78 79 80 93
+    else_if_list <ctype> (77)
+        on left: 82 83
+        on right: 82 86 87
+    ifst <ctype> (78)
+        on left: 84 85 86 87
+        on right: 27 37
+    forst <ctype> (79)
+        on left: 88 89
+        on right: 28 38
+    dowhilest <ctype> (80)
+        on left: 90 91
+        on right: 29 39
+    retrnst <ctype> (81)
+        on left: 92 93 94
+        on right: 32 42
+
+
+State 0
+
+    0 $accept: . program $end
+
+    FUNCTION  shift, and go to state 1
+
+    program     go to state 2
+    functionst  go to state 3
+
+
+State 1
+
+    4 functionst: FUNCTION . return_types functionnamest BRACE args END_BRACE codes ENDFUNCTION
+
+    INT     shift, and go to state 4
+    STRING  shift, and go to state 5
+    VOID    shift, and go to state 6
+
+    return_types  go to state 7
+    typest        go to state 8
+
+
+State 2
+
+    0 $accept: program . $end
+    1 program: program . functionst
+
+    $end      shift, and go to state 9
+    FUNCTION  shift, and go to state 1
+
+    functionst  go to state 10
+
+
+State 3
+
+    2 program: functionst .
+
+    $default  reduce using rule 2 (program)
+
+
+State 4
+
+    7 typest: INT .
+
+    $default  reduce using rule 7 (typest)
+
+
+State 5
+
+    8 typest: STRING .
+
+    $default  reduce using rule 8 (typest)
+
+
+State 6
+
+    9 typest: VOID .
+
+    $default  reduce using rule 9 (typest)
+
+
+State 7
+
+    4 functionst: FUNCTION return_types . functionnamest BRACE args END_BRACE codes ENDFUNCTION
+    5 return_types: return_types . typest
+
+    INT     shift, and go to state 4
+    STRING  shift, and go to state 5
+    VOID    shift, and go to state 6
+    TOKEN   shift, and go to state 11
+
+    functionnamest  go to state 12
+    typest          go to state 13
+
+
+State 8
+
+    6 return_types: typest .
+
+    $default  reduce using rule 6 (return_types)
+
+
+State 9
+
+    0 $accept: program $end .
+
+    $default  accept
+
+
+State 10
+
+    1 program: program functionst .
+
+    $default  reduce using rule 1 (program)
+
+
+State 11
+
+    3 functionnamest: TOKEN .
+
+    $default  reduce using rule 3 (functionnamest)
+
+
+State 12
+
+    4 functionst: FUNCTION return_types functionnamest . BRACE args END_BRACE codes ENDFUNCTION
+
+    BRACE  shift, and go to state 14
+
+
+State 13
+
+    5 return_types: return_types typest .
+
+    $default  reduce using rule 5 (return_types)
+
+
+State 14
+
+    4 functionst: FUNCTION return_types functionnamest BRACE . args END_BRACE codes ENDFUNCTION
+
+    INT     shift, and go to state 4
+    STRING  shift, and go to state 5
+    VOID    shift, and go to state 6
+
+    typest  go to state 15
+    args    go to state 16
+
+
+State 15
+
+   23 args: typest . TOKEN
+
+    TOKEN  shift, and go to state 17
+
+
+State 16
+
+    4 functionst: FUNCTION return_types functionnamest BRACE args . END_BRACE codes ENDFUNCTION
+   22 args: args . COMMA typest TOKEN
+
+    COMMA      shift, and go to state 18
+    END_BRACE  shift, and go to state 19
+
+
+State 17
+
+   23 args: typest TOKEN .
+
+    $default  reduce using rule 23 (args)
+
+
+State 18
+
+   22 args: args COMMA . typest TOKEN
+
+    INT     shift, and go to state 4
+    STRING  shift, and go to state 5
+    VOID    shift, and go to state 6
+
+    typest  go to state 20
+
+
+State 19
+
+    4 functionst: FUNCTION return_types functionnamest BRACE args END_BRACE . codes ENDFUNCTION
+
+    IF                  shift, and go to state 21
+    FOR                 shift, and go to state 22
+    WHILE               shift, and go to state 23
+    DO                  shift, and go to state 24
+    BREAK               shift, and go to state 25
+    CONTINUE            shift, and go to state 26
+    RETRN               shift, and go to state 27
+    INT                 shift, and go to state 28
+    STRING              shift, and go to state 29
+    VOID                shift, and go to state 30
+    STR_RETERAL         shift, and go to state 31
+    INT_RETERAL         shift, and go to state 32
+    MINUS_INT_RETERAL   shift, and go to state 33
+    BIT_NOT             shift, and go to state 34
+    TOKEN               shift, and go to state 35
+    RESERVED_WORD       shift, and go to state 36
+    BRACE               shift, and go to state 37
+    LEFT_INDEX_BRACKET  shift, and go to state 38
+
+    typest         go to state 39
+    var            go to state 40
+    codes          go to state 41
+    array_reteral  go to state 42
+    expr           go to state 43
+    callst         go to state 44
+    ifst           go to state 45
+    forst          go to state 46
+    dowhilest      go to state 47
+    retrnst        go to state 48
+
+
+State 20
+
+   22 args: args COMMA typest . TOKEN
+
+    TOKEN  shift, and go to state 49
+
+
+State 21
+
+   84 ifst: IF . expr THEN codes ENDIF
+   85     | IF . expr THEN codes ELSE codes ENDIF
+   86     | IF . expr THEN codes else_if_list ENDIF
+   87     | IF . expr THEN codes else_if_list ELSE codes ENDIF
+
+    STR_RETERAL        shift, and go to state 31
+    INT_RETERAL        shift, and go to state 32
+    MINUS_INT_RETERAL  shift, and go to state 33
+    BIT_NOT            shift, and go to state 34
+    TOKEN              shift, and go to state 50
+    BRACE              shift, and go to state 37
+
+    expr  go to state 51
+
+
+State 22
+
+   88 forst: FOR . TOKEN EQUAL expr TO expr codes NEXT
+   89      | FOR . TOKEN EQUAL expr TO expr STEP expr codes NEXT
+
+    TOKEN  shift, and go to state 52
+
+
+State 23
+
+   91 dowhilest: WHILE . expr codes ENDWHILE
+
+    STR_RETERAL        shift, and go to state 31
+    INT_RETERAL        shift, and go to state 32
+    MINUS_INT_RETERAL  shift, and go to state 33
+    BIT_NOT            shift, and go to state 34
+    TOKEN              shift, and go to state 50
+    BRACE              shift, and go to state 37
+
+    expr  go to state 53
+
+
+State 24
+
+   90 dowhilest: DO . WHILE expr codes LOOP
+
+    WHILE  shift, and go to state 54
+
+
+State 25
+
+   30 codes: BREAK . CR
+
+    CR  shift, and go to state 55
+
+
+State 26
+
+   31 codes: CONTINUE . CR
+
+    CR  shift, and go to state 56
+
+
+State 27
+
+   92 retrnst: RETRN . expr
+   93        | RETRN . LEFT_INDEX_BRACKET manytokenst RIGHT_INDEX_BRACKET
+   94        | RETRN .
+
+    STR_RETERAL         shift, and go to state 31
+    INT_RETERAL         shift, and go to state 32
+    MINUS_INT_RETERAL   shift, and go to state 33
+    BIT_NOT             shift, and go to state 34
+    TOKEN               shift, and go to state 50
+    BRACE               shift, and go to state 37
+    LEFT_INDEX_BRACKET  shift, and go to state 57
+
+    $default  reduce using rule 94 (retrnst)
+
+    expr  go to state 58
+
+
+State 28
+
+    7 typest: INT .
+   16 var: INT . TOKEN LEFT_INDEX_BRACKET INT_RETERAL RIGHT_INDEX_BRACKET
+   18    | INT . TOKEN LEFT_INDEX_BRACKET INT_RETERAL RIGHT_INDEX_BRACKET EQUAL LEFT_INDEX_BRACKET initialize_intval_st RIGHT_INDEX_BRACKET
+
+    TOKEN  shift, and go to state 59
+
+    TOKEN  [reduce using rule 7 (typest)]
+
+
+State 29
+
+    8 typest: STRING .
+   17 var: STRING . TOKEN LEFT_INDEX_BRACKET INT_RETERAL RIGHT_INDEX_BRACKET
+   19    | STRING . TOKEN LEFT_INDEX_BRACKET INT_RETERAL RIGHT_INDEX_BRACKET EQUAL LEFT_INDEX_BRACKET initialize_strval_st RIGHT_INDEX_BRACKET
+
+    TOKEN  shift, and go to state 60
+
+    TOKEN  [reduce using rule 8 (typest)]
+
+
+State 30
+
+    9 typest: VOID .
+   21 var: VOID .
+
+    CR        reduce using rule 21 (var)
+    $default  reduce using rule 9 (typest)
+
+
+State 31
+
+   50 expr: STR_RETERAL .
+
+    $default  reduce using rule 50 (expr)
+
+
+State 32
+
+   49 expr: INT_RETERAL .
+
+    $default  reduce using rule 49 (expr)
+
+
+State 33
+
+   51 expr: MINUS_INT_RETERAL .
+
+    $default  reduce using rule 51 (expr)
+
+
+State 34
+
+   68 expr: BIT_NOT . expr
+
+    STR_RETERAL        shift, and go to state 31
+    INT_RETERAL        shift, and go to state 32
+    MINUS_INT_RETERAL  shift, and go to state 33
+    BIT_NOT            shift, and go to state 34
+    TOKEN              shift, and go to state 50
+    BRACE              shift, and go to state 37
+
+    expr  go to state 61
+
+
+State 35
+
+   76 expr: TOKEN .
+   77     | TOKEN . LEFT_INDEX_BRACKET expr RIGHT_INDEX_BRACKET
+   78 callst: TOKEN . BRACE manytokenst END_BRACE
+
+    BRACE               shift, and go to state 62
+    LEFT_INDEX_BRACKET  shift, and go to state 63
+
+    $default  reduce using rule 76 (expr)
+
+
+State 36
+
+   79 callst: RESERVED_WORD . BRACE manytokenst END_BRACE
+
+    BRACE  shift, and go to state 64
+
+
+State 37
+
+   52 expr: BRACE . expr END_BRACE
+
+    STR_RETERAL        shift, and go to state 31
+    INT_RETERAL        shift, and go to state 32
+    MINUS_INT_RETERAL  shift, and go to state 33
+    BIT_NOT            shift, and go to state 34
+    TOKEN              shift, and go to state 50
+    BRACE              shift, and go to state 37
+
+    expr  go to state 65
+
+
+State 38
+
+   48 array_reteral: LEFT_INDEX_BRACKET . return_vars RIGHT_INDEX_BRACKET
+
+    TOKEN  shift, and go to state 66
+
+    accessable_var  go to state 67
+    return_vars     go to state 68
+
+
+State 39
+
+   14 var: typest . TOKEN
+   15    | typest . TOKEN EQUAL INT_RETERAL
+   20    | typest . TOKEN EQUAL STR_RETERAL
+
+    TOKEN  shift, and go to state 69
+
+
+State 40
+
+   24 codes: var . CR
+
+    CR  shift, and go to state 70
+
+
+State 41
+
+    4 functionst: FUNCTION return_types functionnamest BRACE args END_BRACE codes . ENDFUNCTION
+   34 codes: codes . var CR
+   35      | codes . callst CR
+   36      | codes . array_reteral EQUAL callst CR
+   37      | codes . ifst
+   38      | codes . forst
+   39      | codes . dowhilest
+   40      | codes . BREAK CR
+   41      | codes . CONTINUE CR
+   42      | codes . retrnst CR
+   43      | codes . expr CR
+
+    IF                  shift, and go to state 21
+    FOR                 shift, and go to state 22
+    WHILE               shift, and go to state 23
+    DO                  shift, and go to state 24
+    ENDFUNCTION         shift, and go to state 71
+    BREAK               shift, and go to state 72
+    CONTINUE            shift, and go to state 73
+    RETRN               shift, and go to state 27
+    INT                 shift, and go to state 28
+    STRING              shift, and go to state 29
+    VOID                shift, and go to state 30
+    STR_RETERAL         shift, and go to state 31
+    INT_RETERAL         shift, and go to state 32
+    MINUS_INT_RETERAL   shift, and go to state 33
+    BIT_NOT             shift, and go to state 34
+    TOKEN               shift, and go to state 35
+    RESERVED_WORD       shift, and go to state 36
+    BRACE               shift, and go to state 37
+    LEFT_INDEX_BRACKET  shift, and go to state 38
+
+    typest         go to state 39
+    var            go to state 74
+    array_reteral  go to state 75
+    expr           go to state 76
+    callst         go to state 77
+    ifst           go to state 78
+    forst          go to state 79
+    dowhilest      go to state 80
+    retrnst        go to state 81
+
+
+State 42
+
+   26 codes: array_reteral . EQUAL callst CR
+
+    EQUAL  shift, and go to state 82
+
+
+State 43
+
+   33 codes: expr . CR
+   53 expr: expr . PLUS expr
+   54     | expr . MINUS expr
+   55     | expr . ASTA expr
+   56     | expr . SLASH expr
+   57     | expr . MOD expr
+   58     | expr . EQUAL expr
+   59     | expr . EQUAL_EQUAL expr
+   60     | expr . NOT_EQUAL expr
+   61     | expr . LOGICAL_NOT
+   62     | expr . LOGICAL_AND expr
+   63     | expr . LOGICAL_OR expr
+   64     | expr . GRATER_THAN_LEFT expr
+   65     | expr . GRATER_THAN_RIGHT expr
+   66     | expr . EQUAL_GRATER_THAN_LEFT expr
+   67     | expr . EQUAL_GRATER_THAN_RIGHT expr
+   69     | expr . LEFT_SHIFT expr
+   70     | expr . RIGHT_SHIFT expr
+   71     | expr . LEFT_SHIFT_LOGIC expr
+   72     | expr . RIGHT_SHIFT_LOGIC expr
+   73     | expr . BIT_AND expr
+   74     | expr . BIT_OR expr
+   75     | expr . BIT_XOR expr
+
+    EQUAL                    shift, and go to state 83
+    PLUS                     shift, and go to state 84
+    MINUS                    shift, and go to state 85
+    ASTA                     shift, and go to state 86
+    SLASH                    shift, and go to state 87
+    MOD                      shift, and go to state 88
+    LEFT_SHIFT               shift, and go to state 89
+    RIGHT_SHIFT              shift, and go to state 90
+    LEFT_SHIFT_LOGIC         shift, and go to state 91
+    RIGHT_SHIFT_LOGIC        shift, and go to state 92
+    BIT_AND                  shift, and go to state 93
+    BIT_XOR                  shift, and go to state 94
+    BIT_OR                   shift, and go to state 95
+    GRATER_THAN_LEFT         shift, and go to state 96
+    GRATER_THAN_RIGHT        shift, and go to state 97
+    EQUAL_GRATER_THAN_LEFT   shift, and go to state 98
+    EQUAL_GRATER_THAN_RIGHT  shift, and go to state 99
+    EQUAL_EQUAL              shift, and go to state 100
+    LOGICAL_NOT              shift, and go to state 101
+    NOT_EQUAL                shift, and go to state 102
+    LOGICAL_AND              shift, and go to state 103
+    LOGICAL_OR               shift, and go to state 104
+    CR                       shift, and go to state 105
+
+
+State 44
+
+   25 codes: callst . CR
+
+    CR  shift, and go to state 106
+
+
+State 45
+
+   27 codes: ifst .
+
+    $default  reduce using rule 27 (codes)
+
+
+State 46
+
+   28 codes: forst .
+
+    $default  reduce using rule 28 (codes)
+
+
+State 47
+
+   29 codes: dowhilest .
+
+    $default  reduce using rule 29 (codes)
+
+
+State 48
+
+   32 codes: retrnst . CR
+
+    CR  shift, and go to state 107
+
+
+State 49
+
+   22 args: args COMMA typest TOKEN .
+
+    $default  reduce using rule 22 (args)
+
+
+State 50
+
+   76 expr: TOKEN .
+   77     | TOKEN . LEFT_INDEX_BRACKET expr RIGHT_INDEX_BRACKET
+
+    LEFT_INDEX_BRACKET  shift, and go to state 63
+
+    LEFT_INDEX_BRACKET  [reduce using rule 76 (expr)]
+    $default            reduce using rule 76 (expr)
+
+
+State 51
+
+   53 expr: expr . PLUS expr
+   54     | expr . MINUS expr
+   55     | expr . ASTA expr
+   56     | expr . SLASH expr
+   57     | expr . MOD expr
+   58     | expr . EQUAL expr
+   59     | expr . EQUAL_EQUAL expr
+   60     | expr . NOT_EQUAL expr
+   61     | expr . LOGICAL_NOT
+   62     | expr . LOGICAL_AND expr
+   63     | expr . LOGICAL_OR expr
+   64     | expr . GRATER_THAN_LEFT expr
+   65     | expr . GRATER_THAN_RIGHT expr
+   66     | expr . EQUAL_GRATER_THAN_LEFT expr
+   67     | expr . EQUAL_GRATER_THAN_RIGHT expr
+   69     | expr . LEFT_SHIFT expr
+   70     | expr . RIGHT_SHIFT expr
+   71     | expr . LEFT_SHIFT_LOGIC expr
+   72     | expr . RIGHT_SHIFT_LOGIC expr
+   73     | expr . BIT_AND expr
+   74     | expr . BIT_OR expr
+   75     | expr . BIT_XOR expr
+   84 ifst: IF expr . THEN codes ENDIF
+   85     | IF expr . THEN codes ELSE codes ENDIF
+   86     | IF expr . THEN codes else_if_list ENDIF
+   87     | IF expr . THEN codes else_if_list ELSE codes ENDIF
+
+    THEN                     shift, and go to state 108
+    EQUAL                    shift, and go to state 83
+    PLUS                     shift, and go to state 84
+    MINUS                    shift, and go to state 85
+    ASTA                     shift, and go to state 86
+    SLASH                    shift, and go to state 87
+    MOD                      shift, and go to state 88
+    LEFT_SHIFT               shift, and go to state 89
+    RIGHT_SHIFT              shift, and go to state 90
+    LEFT_SHIFT_LOGIC         shift, and go to state 91
+    RIGHT_SHIFT_LOGIC        shift, and go to state 92
+    BIT_AND                  shift, and go to state 93
+    BIT_XOR                  shift, and go to state 94
+    BIT_OR                   shift, and go to state 95
+    GRATER_THAN_LEFT         shift, and go to state 96
+    GRATER_THAN_RIGHT        shift, and go to state 97
+    EQUAL_GRATER_THAN_LEFT   shift, and go to state 98
+    EQUAL_GRATER_THAN_RIGHT  shift, and go to state 99
+    EQUAL_EQUAL              shift, and go to state 100
+    LOGICAL_NOT              shift, and go to state 101
+    NOT_EQUAL                shift, and go to state 102
+    LOGICAL_AND              shift, and go to state 103
+    LOGICAL_OR               shift, and go to state 104
+
+
+State 52
+
+   88 forst: FOR TOKEN . EQUAL expr TO expr codes NEXT
+   89      | FOR TOKEN . EQUAL expr TO expr STEP expr codes NEXT
+
+    EQUAL  shift, and go to state 109
+
+
+State 53
+
+   53 expr: expr . PLUS expr
+   54     | expr . MINUS expr
+   55     | expr . ASTA expr
+   56     | expr . SLASH expr
+   57     | expr . MOD expr
+   58     | expr . EQUAL expr
+   59     | expr . EQUAL_EQUAL expr
+   60     | expr . NOT_EQUAL expr
+   61     | expr . LOGICAL_NOT
+   62     | expr . LOGICAL_AND expr
+   63     | expr . LOGICAL_OR expr
+   64     | expr . GRATER_THAN_LEFT expr
+   65     | expr . GRATER_THAN_RIGHT expr
+   66     | expr . EQUAL_GRATER_THAN_LEFT expr
+   67     | expr . EQUAL_GRATER_THAN_RIGHT expr
+   69     | expr . LEFT_SHIFT expr
+   70     | expr . RIGHT_SHIFT expr
+   71     | expr . LEFT_SHIFT_LOGIC expr
+   72     | expr . RIGHT_SHIFT_LOGIC expr
+   73     | expr . BIT_AND expr
+   74     | expr . BIT_OR expr
+   75     | expr . BIT_XOR expr
+   91 dowhilest: WHILE expr . codes ENDWHILE
+
+    IF                       shift, and go to state 21
+    FOR                      shift, and go to state 22
+    WHILE                    shift, and go to state 23
+    DO                       shift, and go to state 24
+    BREAK                    shift, and go to state 25
+    CONTINUE                 shift, and go to state 26
+    RETRN                    shift, and go to state 27
+    INT                      shift, and go to state 28
+    STRING                   shift, and go to state 29
+    VOID                     shift, and go to state 30
+    STR_RETERAL              shift, and go to state 31
+    INT_RETERAL              shift, and go to state 32
+    MINUS_INT_RETERAL        shift, and go to state 33
+    EQUAL                    shift, and go to state 83
+    BIT_NOT                  shift, and go to state 34
+    PLUS                     shift, and go to state 84
+    MINUS                    shift, and go to state 85
+    ASTA                     shift, and go to state 86
+    SLASH                    shift, and go to state 87
+    MOD                      shift, and go to state 88
+    LEFT_SHIFT               shift, and go to state 89
+    RIGHT_SHIFT              shift, and go to state 90
+    LEFT_SHIFT_LOGIC         shift, and go to state 91
+    RIGHT_SHIFT_LOGIC        shift, and go to state 92
+    BIT_AND                  shift, and go to state 93
+    BIT_XOR                  shift, and go to state 94
+    BIT_OR                   shift, and go to state 95
+    GRATER_THAN_LEFT         shift, and go to state 96
+    GRATER_THAN_RIGHT        shift, and go to state 97
+    EQUAL_GRATER_THAN_LEFT   shift, and go to state 98
+    EQUAL_GRATER_THAN_RIGHT  shift, and go to state 99
+    EQUAL_EQUAL              shift, and go to state 100
+    LOGICAL_NOT              shift, and go to state 101
+    NOT_EQUAL                shift, and go to state 102
+    LOGICAL_AND              shift, and go to state 103
+    LOGICAL_OR               shift, and go to state 104
+    TOKEN                    shift, and go to state 35
+    RESERVED_WORD            shift, and go to state 36
+    BRACE                    shift, and go to state 37
+    LEFT_INDEX_BRACKET       shift, and go to state 38
+
+    typest         go to state 39
+    var            go to state 40
+    codes          go to state 110
+    array_reteral  go to state 42
+    expr           go to state 43
+    callst         go to state 44
+    ifst           go to state 45
+    forst          go to state 46
+    dowhilest      go to state 47
+    retrnst        go to state 48
+
+
+State 54
+
+   90 dowhilest: DO WHILE . expr codes LOOP
+
+    STR_RETERAL        shift, and go to state 31
+    INT_RETERAL        shift, and go to state 32
+    MINUS_INT_RETERAL  shift, and go to state 33
+    BIT_NOT            shift, and go to state 34
+    TOKEN              shift, and go to state 50
+    BRACE              shift, and go to state 37
+
+    expr  go to state 111
+
+
+State 55
+
+   30 codes: BREAK CR .
+
+    $default  reduce using rule 30 (codes)
+
+
+State 56
+
+   31 codes: CONTINUE CR .
+
+    $default  reduce using rule 31 (codes)
+
+
+State 57
+
+   93 retrnst: RETRN LEFT_INDEX_BRACKET . manytokenst RIGHT_INDEX_BRACKET
+
+    STR_RETERAL        shift, and go to state 31
+    INT_RETERAL        shift, and go to state 32
+    MINUS_INT_RETERAL  shift, and go to state 33
+    BIT_NOT            shift, and go to state 34
+    TOKEN              shift, and go to state 50
+    BRACE              shift, and go to state 37
+
+    expr         go to state 112
+    manytokenst  go to state 113
+
+
+State 58
+
+   53 expr: expr . PLUS expr
+   54     | expr . MINUS expr
+   55     | expr . ASTA expr
+   56     | expr . SLASH expr
+   57     | expr . MOD expr
+   58     | expr . EQUAL expr
+   59     | expr . EQUAL_EQUAL expr
+   60     | expr . NOT_EQUAL expr
+   61     | expr . LOGICAL_NOT
+   62     | expr . LOGICAL_AND expr
+   63     | expr . LOGICAL_OR expr
+   64     | expr . GRATER_THAN_LEFT expr
+   65     | expr . GRATER_THAN_RIGHT expr
+   66     | expr . EQUAL_GRATER_THAN_LEFT expr
+   67     | expr . EQUAL_GRATER_THAN_RIGHT expr
+   69     | expr . LEFT_SHIFT expr
+   70     | expr . RIGHT_SHIFT expr
+   71     | expr . LEFT_SHIFT_LOGIC expr
+   72     | expr . RIGHT_SHIFT_LOGIC expr
+   73     | expr . BIT_AND expr
+   74     | expr . BIT_OR expr
+   75     | expr . BIT_XOR expr
+   92 retrnst: RETRN expr .
+
+    EQUAL                    shift, and go to state 83
+    PLUS                     shift, and go to state 84
+    MINUS                    shift, and go to state 85
+    ASTA                     shift, and go to state 86
+    SLASH                    shift, and go to state 87
+    MOD                      shift, and go to state 88
+    LEFT_SHIFT               shift, and go to state 89
+    RIGHT_SHIFT              shift, and go to state 90
+    LEFT_SHIFT_LOGIC         shift, and go to state 91
+    RIGHT_SHIFT_LOGIC        shift, and go to state 92
+    BIT_AND                  shift, and go to state 93
+    BIT_XOR                  shift, and go to state 94
+    BIT_OR                   shift, and go to state 95
+    GRATER_THAN_LEFT         shift, and go to state 96
+    GRATER_THAN_RIGHT        shift, and go to state 97
+    EQUAL_GRATER_THAN_LEFT   shift, and go to state 98
+    EQUAL_GRATER_THAN_RIGHT  shift, and go to state 99
+    EQUAL_EQUAL              shift, and go to state 100
+    LOGICAL_NOT              shift, and go to state 101
+    NOT_EQUAL                shift, and go to state 102
+    LOGICAL_AND              shift, and go to state 103
+    LOGICAL_OR               shift, and go to state 104
+
+    $default  reduce using rule 92 (retrnst)
+
+
+State 59
+
+   16 var: INT TOKEN . LEFT_INDEX_BRACKET INT_RETERAL RIGHT_INDEX_BRACKET
+   18    | INT TOKEN . LEFT_INDEX_BRACKET INT_RETERAL RIGHT_INDEX_BRACKET EQUAL LEFT_INDEX_BRACKET initialize_intval_st RIGHT_INDEX_BRACKET
+
+    LEFT_INDEX_BRACKET  shift, and go to state 114
+
+
+State 60
+
+   17 var: STRING TOKEN . LEFT_INDEX_BRACKET INT_RETERAL RIGHT_INDEX_BRACKET
+   19    | STRING TOKEN . LEFT_INDEX_BRACKET INT_RETERAL RIGHT_INDEX_BRACKET EQUAL LEFT_INDEX_BRACKET initialize_strval_st RIGHT_INDEX_BRACKET
+
+    LEFT_INDEX_BRACKET  shift, and go to state 115
+
+
+State 61
+
+   53 expr: expr . PLUS expr
+   54     | expr . MINUS expr
+   55     | expr . ASTA expr
+   56     | expr . SLASH expr
+   57     | expr . MOD expr
+   58     | expr . EQUAL expr
+   59     | expr . EQUAL_EQUAL expr
+   60     | expr . NOT_EQUAL expr
+   61     | expr . LOGICAL_NOT
+   62     | expr . LOGICAL_AND expr
+   63     | expr . LOGICAL_OR expr
+   64     | expr . GRATER_THAN_LEFT expr
+   65     | expr . GRATER_THAN_RIGHT expr
+   66     | expr . EQUAL_GRATER_THAN_LEFT expr
+   67     | expr . EQUAL_GRATER_THAN_RIGHT expr
+   68     | BIT_NOT expr .
+   69     | expr . LEFT_SHIFT expr
+   70     | expr . RIGHT_SHIFT expr
+   71     | expr . LEFT_SHIFT_LOGIC expr
+   72     | expr . RIGHT_SHIFT_LOGIC expr
+   73     | expr . BIT_AND expr
+   74     | expr . BIT_OR expr
+   75     | expr . BIT_XOR expr
+
+    EQUAL                    shift, and go to state 83
+    PLUS                     shift, and go to state 84
+    MINUS                    shift, and go to state 85
+    ASTA                     shift, and go to state 86
+    SLASH                    shift, and go to state 87
+    MOD                      shift, and go to state 88
+    LEFT_SHIFT               shift, and go to state 89
+    RIGHT_SHIFT              shift, and go to state 90
+    LEFT_SHIFT_LOGIC         shift, and go to state 91
+    RIGHT_SHIFT_LOGIC        shift, and go to state 92
+    BIT_AND                  shift, and go to state 93
+    BIT_XOR                  shift, and go to state 94
+    BIT_OR                   shift, and go to state 95
+    GRATER_THAN_LEFT         shift, and go to state 96
+    GRATER_THAN_RIGHT        shift, and go to state 97
+    EQUAL_GRATER_THAN_LEFT   shift, and go to state 98
+    EQUAL_GRATER_THAN_RIGHT  shift, and go to state 99
+    EQUAL_EQUAL              shift, and go to state 100
+    LOGICAL_NOT              shift, and go to state 101
+    NOT_EQUAL                shift, and go to state 102
+    LOGICAL_AND              shift, and go to state 103
+    LOGICAL_OR               shift, and go to state 104
+
+    $default  reduce using rule 68 (expr)
+
+
+State 62
+
+   78 callst: TOKEN BRACE . manytokenst END_BRACE
+
+    STR_RETERAL        shift, and go to state 31
+    INT_RETERAL        shift, and go to state 32
+    MINUS_INT_RETERAL  shift, and go to state 33
+    BIT_NOT            shift, and go to state 34
+    TOKEN              shift, and go to state 50
+    BRACE              shift, and go to state 37
+
+    expr         go to state 112
+    manytokenst  go to state 116
+
+
+State 63
+
+   77 expr: TOKEN LEFT_INDEX_BRACKET . expr RIGHT_INDEX_BRACKET
+
+    STR_RETERAL        shift, and go to state 31
+    INT_RETERAL        shift, and go to state 32
+    MINUS_INT_RETERAL  shift, and go to state 33
+    BIT_NOT            shift, and go to state 34
+    TOKEN              shift, and go to state 50
+    BRACE              shift, and go to state 37
+
+    expr  go to state 117
+
+
+State 64
+
+   79 callst: RESERVED_WORD BRACE . manytokenst END_BRACE
+
+    STR_RETERAL        shift, and go to state 31
+    INT_RETERAL        shift, and go to state 32
+    MINUS_INT_RETERAL  shift, and go to state 33
+    BIT_NOT            shift, and go to state 34
+    TOKEN              shift, and go to state 50
+    BRACE              shift, and go to state 37
+
+    expr         go to state 112
+    manytokenst  go to state 118
+
+
+State 65
+
+   52 expr: BRACE expr . END_BRACE
+   53     | expr . PLUS expr
+   54     | expr . MINUS expr
+   55     | expr . ASTA expr
+   56     | expr . SLASH expr
+   57     | expr . MOD expr
+   58     | expr . EQUAL expr
+   59     | expr . EQUAL_EQUAL expr
+   60     | expr . NOT_EQUAL expr
+   61     | expr . LOGICAL_NOT
+   62     | expr . LOGICAL_AND expr
+   63     | expr . LOGICAL_OR expr
+   64     | expr . GRATER_THAN_LEFT expr
+   65     | expr . GRATER_THAN_RIGHT expr
+   66     | expr . EQUAL_GRATER_THAN_LEFT expr
+   67     | expr . EQUAL_GRATER_THAN_RIGHT expr
+   69     | expr . LEFT_SHIFT expr
+   70     | expr . RIGHT_SHIFT expr
+   71     | expr . LEFT_SHIFT_LOGIC expr
+   72     | expr . RIGHT_SHIFT_LOGIC expr
+   73     | expr . BIT_AND expr
+   74     | expr . BIT_OR expr
+   75     | expr . BIT_XOR expr
+
+    EQUAL                    shift, and go to state 83
+    PLUS                     shift, and go to state 84
+    MINUS                    shift, and go to state 85
+    ASTA                     shift, and go to state 86
+    SLASH                    shift, and go to state 87
+    MOD                      shift, and go to state 88
+    LEFT_SHIFT               shift, and go to state 89
+    RIGHT_SHIFT              shift, and go to state 90
+    LEFT_SHIFT_LOGIC         shift, and go to state 91
+    RIGHT_SHIFT_LOGIC        shift, and go to state 92
+    BIT_AND                  shift, and go to state 93
+    BIT_XOR                  shift, and go to state 94
+    BIT_OR                   shift, and go to state 95
+    GRATER_THAN_LEFT         shift, and go to state 96
+    GRATER_THAN_RIGHT        shift, and go to state 97
+    EQUAL_GRATER_THAN_LEFT   shift, and go to state 98
+    EQUAL_GRATER_THAN_RIGHT  shift, and go to state 99
+    EQUAL_EQUAL              shift, and go to state 100
+    LOGICAL_NOT              shift, and go to state 101
+    NOT_EQUAL                shift, and go to state 102
+    LOGICAL_AND              shift, and go to state 103
+    LOGICAL_OR               shift, and go to state 104
+    END_BRACE                shift, and go to state 119
+
+
+State 66
+
+   44 accessable_var: TOKEN .
+   45               | TOKEN . LEFT_INDEX_BRACKET expr RIGHT_INDEX_BRACKET
+
+    LEFT_INDEX_BRACKET  shift, and go to state 120
+
+    $default  reduce using rule 44 (accessable_var)
+
+
+State 67
+
+   47 return_vars: accessable_var .
+
+    $default  reduce using rule 47 (return_vars)
+
+
+State 68
+
+   46 return_vars: return_vars . COMMA accessable_var
+   48 array_reteral: LEFT_INDEX_BRACKET return_vars . RIGHT_INDEX_BRACKET
+
+    COMMA                shift, and go to state 121
+    RIGHT_INDEX_BRACKET  shift, and go to state 122
+
+
+State 69
+
+   14 var: typest TOKEN .
+   15    | typest TOKEN . EQUAL INT_RETERAL
+   20    | typest TOKEN . EQUAL STR_RETERAL
+
+    EQUAL  shift, and go to state 123
+
+    $default  reduce using rule 14 (var)
+
+
+State 70
+
+   24 codes: var CR .
+
+    $default  reduce using rule 24 (codes)
+
+
+State 71
+
+    4 functionst: FUNCTION return_types functionnamest BRACE args END_BRACE codes ENDFUNCTION .
+
+    $default  reduce using rule 4 (functionst)
+
+
+State 72
+
+   40 codes: codes BREAK . CR
+
+    CR  shift, and go to state 124
+
+
+State 73
+
+   41 codes: codes CONTINUE . CR
+
+    CR  shift, and go to state 125
+
+
+State 74
+
+   34 codes: codes var . CR
+
+    CR  shift, and go to state 126
+
+
+State 75
+
+   36 codes: codes array_reteral . EQUAL callst CR
+
+    EQUAL  shift, and go to state 127
+
+
+State 76
+
+   43 codes: codes expr . CR
+   53 expr: expr . PLUS expr
+   54     | expr . MINUS expr
+   55     | expr . ASTA expr
+   56     | expr . SLASH expr
+   57     | expr . MOD expr
+   58     | expr . EQUAL expr
+   59     | expr . EQUAL_EQUAL expr
+   60     | expr . NOT_EQUAL expr
+   61     | expr . LOGICAL_NOT
+   62     | expr . LOGICAL_AND expr
+   63     | expr . LOGICAL_OR expr
+   64     | expr . GRATER_THAN_LEFT expr
+   65     | expr . GRATER_THAN_RIGHT expr
+   66     | expr . EQUAL_GRATER_THAN_LEFT expr
+   67     | expr . EQUAL_GRATER_THAN_RIGHT expr
+   69     | expr . LEFT_SHIFT expr
+   70     | expr . RIGHT_SHIFT expr
+   71     | expr . LEFT_SHIFT_LOGIC expr
+   72     | expr . RIGHT_SHIFT_LOGIC expr
+   73     | expr . BIT_AND expr
+   74     | expr . BIT_OR expr
+   75     | expr . BIT_XOR expr
+
+    EQUAL                    shift, and go to state 83
+    PLUS                     shift, and go to state 84
+    MINUS                    shift, and go to state 85
+    ASTA                     shift, and go to state 86
+    SLASH                    shift, and go to state 87
+    MOD                      shift, and go to state 88
+    LEFT_SHIFT               shift, and go to state 89
+    RIGHT_SHIFT              shift, and go to state 90
+    LEFT_SHIFT_LOGIC         shift, and go to state 91
+    RIGHT_SHIFT_LOGIC        shift, and go to state 92
+    BIT_AND                  shift, and go to state 93
+    BIT_XOR                  shift, and go to state 94
+    BIT_OR                   shift, and go to state 95
+    GRATER_THAN_LEFT         shift, and go to state 96
+    GRATER_THAN_RIGHT        shift, and go to state 97
+    EQUAL_GRATER_THAN_LEFT   shift, and go to state 98
+    EQUAL_GRATER_THAN_RIGHT  shift, and go to state 99
+    EQUAL_EQUAL              shift, and go to state 100
+    LOGICAL_NOT              shift, and go to state 101
+    NOT_EQUAL                shift, and go to state 102
+    LOGICAL_AND              shift, and go to state 103
+    LOGICAL_OR               shift, and go to state 104
+    CR                       shift, and go to state 128
+
+
+State 77
+
+   35 codes: codes callst . CR
+
+    CR  shift, and go to state 129
+
+
+State 78
+
+   37 codes: codes ifst .
+
+    $default  reduce using rule 37 (codes)
+
+
+State 79
+
+   38 codes: codes forst .
+
+    $default  reduce using rule 38 (codes)
+
+
+State 80
+
+   39 codes: codes dowhilest .
+
+    $default  reduce using rule 39 (codes)
+
+
+State 81
+
+   42 codes: codes retrnst . CR
+
+    CR  shift, and go to state 130
+
+
+State 82
+
+   26 codes: array_reteral EQUAL . callst CR
+
+    TOKEN          shift, and go to state 131
+    RESERVED_WORD  shift, and go to state 36
+
+    callst  go to state 132
+
+
+State 83
+
+   58 expr: expr EQUAL . expr
+
+    STR_RETERAL        shift, and go to state 31
+    INT_RETERAL        shift, and go to state 32
+    MINUS_INT_RETERAL  shift, and go to state 33
+    BIT_NOT            shift, and go to state 34
+    TOKEN              shift, and go to state 50
+    BRACE              shift, and go to state 37
+
+    expr  go to state 133
+
+
+State 84
+
+   53 expr: expr PLUS . expr
+
+    STR_RETERAL        shift, and go to state 31
+    INT_RETERAL        shift, and go to state 32
+    MINUS_INT_RETERAL  shift, and go to state 33
+    BIT_NOT            shift, and go to state 34
+    TOKEN              shift, and go to state 50
+    BRACE              shift, and go to state 37
+
+    expr  go to state 134
+
+
+State 85
+
+   54 expr: expr MINUS . expr
+
+    STR_RETERAL        shift, and go to state 31
+    INT_RETERAL        shift, and go to state 32
+    MINUS_INT_RETERAL  shift, and go to state 33
+    BIT_NOT            shift, and go to state 34
+    TOKEN              shift, and go to state 50
+    BRACE              shift, and go to state 37
+
+    expr  go to state 135
+
+
+State 86
+
+   55 expr: expr ASTA . expr
+
+    STR_RETERAL        shift, and go to state 31
+    INT_RETERAL        shift, and go to state 32
+    MINUS_INT_RETERAL  shift, and go to state 33
+    BIT_NOT            shift, and go to state 34
+    TOKEN              shift, and go to state 50
+    BRACE              shift, and go to state 37
+
+    expr  go to state 136
+
+
+State 87
+
+   56 expr: expr SLASH . expr
+
+    STR_RETERAL        shift, and go to state 31
+    INT_RETERAL        shift, and go to state 32
+    MINUS_INT_RETERAL  shift, and go to state 33
+    BIT_NOT            shift, and go to state 34
+    TOKEN              shift, and go to state 50
+    BRACE              shift, and go to state 37
+
+    expr  go to state 137
+
+
+State 88
+
+   57 expr: expr MOD . expr
+
+    STR_RETERAL        shift, and go to state 31
+    INT_RETERAL        shift, and go to state 32
+    MINUS_INT_RETERAL  shift, and go to state 33
+    BIT_NOT            shift, and go to state 34
+    TOKEN              shift, and go to state 50
+    BRACE              shift, and go to state 37
+
+    expr  go to state 138
+
+
+State 89
+
+   69 expr: expr LEFT_SHIFT . expr
+
+    STR_RETERAL        shift, and go to state 31
+    INT_RETERAL        shift, and go to state 32
+    MINUS_INT_RETERAL  shift, and go to state 33
+    BIT_NOT            shift, and go to state 34
+    TOKEN              shift, and go to state 50
+    BRACE              shift, and go to state 37
+
+    expr  go to state 139
+
+
+State 90
+
+   70 expr: expr RIGHT_SHIFT . expr
+
+    STR_RETERAL        shift, and go to state 31
+    INT_RETERAL        shift, and go to state 32
+    MINUS_INT_RETERAL  shift, and go to state 33
+    BIT_NOT            shift, and go to state 34
+    TOKEN              shift, and go to state 50
+    BRACE              shift, and go to state 37
+
+    expr  go to state 140
+
+
+State 91
+
+   71 expr: expr LEFT_SHIFT_LOGIC . expr
+
+    STR_RETERAL        shift, and go to state 31
+    INT_RETERAL        shift, and go to state 32
+    MINUS_INT_RETERAL  shift, and go to state 33
+    BIT_NOT            shift, and go to state 34
+    TOKEN              shift, and go to state 50
+    BRACE              shift, and go to state 37
+
+    expr  go to state 141
+
+
+State 92
+
+   72 expr: expr RIGHT_SHIFT_LOGIC . expr
+
+    STR_RETERAL        shift, and go to state 31
+    INT_RETERAL        shift, and go to state 32
+    MINUS_INT_RETERAL  shift, and go to state 33
+    BIT_NOT            shift, and go to state 34
+    TOKEN              shift, and go to state 50
+    BRACE              shift, and go to state 37
+
+    expr  go to state 142
+
+
+State 93
+
+   73 expr: expr BIT_AND . expr
+
+    STR_RETERAL        shift, and go to state 31
+    INT_RETERAL        shift, and go to state 32
+    MINUS_INT_RETERAL  shift, and go to state 33
+    BIT_NOT            shift, and go to state 34
+    TOKEN              shift, and go to state 50
+    BRACE              shift, and go to state 37
+
+    expr  go to state 143
+
+
+State 94
+
+   75 expr: expr BIT_XOR . expr
+
+    STR_RETERAL        shift, and go to state 31
+    INT_RETERAL        shift, and go to state 32
+    MINUS_INT_RETERAL  shift, and go to state 33
+    BIT_NOT            shift, and go to state 34
+    TOKEN              shift, and go to state 50
+    BRACE              shift, and go to state 37
+
+    expr  go to state 144
+
+
+State 95
+
+   74 expr: expr BIT_OR . expr
+
+    STR_RETERAL        shift, and go to state 31
+    INT_RETERAL        shift, and go to state 32
+    MINUS_INT_RETERAL  shift, and go to state 33
+    BIT_NOT            shift, and go to state 34
+    TOKEN              shift, and go to state 50
+    BRACE              shift, and go to state 37
+
+    expr  go to state 145
+
+
+State 96
+
+   64 expr: expr GRATER_THAN_LEFT . expr
+
+    STR_RETERAL        shift, and go to state 31
+    INT_RETERAL        shift, and go to state 32
+    MINUS_INT_RETERAL  shift, and go to state 33
+    BIT_NOT            shift, and go to state 34
+    TOKEN              shift, and go to state 50
+    BRACE              shift, and go to state 37
+
+    expr  go to state 146
+
+
+State 97
+
+   65 expr: expr GRATER_THAN_RIGHT . expr
+
+    STR_RETERAL        shift, and go to state 31
+    INT_RETERAL        shift, and go to state 32
+    MINUS_INT_RETERAL  shift, and go to state 33
+    BIT_NOT            shift, and go to state 34
+    TOKEN              shift, and go to state 50
+    BRACE              shift, and go to state 37
+
+    expr  go to state 147
+
+
+State 98
+
+   66 expr: expr EQUAL_GRATER_THAN_LEFT . expr
+
+    STR_RETERAL        shift, and go to state 31
+    INT_RETERAL        shift, and go to state 32
+    MINUS_INT_RETERAL  shift, and go to state 33
+    BIT_NOT            shift, and go to state 34
+    TOKEN              shift, and go to state 50
+    BRACE              shift, and go to state 37
+
+    expr  go to state 148
+
+
+State 99
+
+   67 expr: expr EQUAL_GRATER_THAN_RIGHT . expr
+
+    STR_RETERAL        shift, and go to state 31
+    INT_RETERAL        shift, and go to state 32
+    MINUS_INT_RETERAL  shift, and go to state 33
+    BIT_NOT            shift, and go to state 34
+    TOKEN              shift, and go to state 50
+    BRACE              shift, and go to state 37
+
+    expr  go to state 149
+
+
+State 100
+
+   59 expr: expr EQUAL_EQUAL . expr
+
+    STR_RETERAL        shift, and go to state 31
+    INT_RETERAL        shift, and go to state 32
+    MINUS_INT_RETERAL  shift, and go to state 33
+    BIT_NOT            shift, and go to state 34
+    TOKEN              shift, and go to state 50
+    BRACE              shift, and go to state 37
+
+    expr  go to state 150
+
+
+State 101
+
+   61 expr: expr LOGICAL_NOT .
+
+    $default  reduce using rule 61 (expr)
+
+
+State 102
+
+   60 expr: expr NOT_EQUAL . expr
+
+    STR_RETERAL        shift, and go to state 31
+    INT_RETERAL        shift, and go to state 32
+    MINUS_INT_RETERAL  shift, and go to state 33
+    BIT_NOT            shift, and go to state 34
+    TOKEN              shift, and go to state 50
+    BRACE              shift, and go to state 37
+
+    expr  go to state 151
+
+
+State 103
+
+   62 expr: expr LOGICAL_AND . expr
+
+    STR_RETERAL        shift, and go to state 31
+    INT_RETERAL        shift, and go to state 32
+    MINUS_INT_RETERAL  shift, and go to state 33
+    BIT_NOT            shift, and go to state 34
+    TOKEN              shift, and go to state 50
+    BRACE              shift, and go to state 37
+
+    expr  go to state 152
+
+
+State 104
+
+   63 expr: expr LOGICAL_OR . expr
+
+    STR_RETERAL        shift, and go to state 31
+    INT_RETERAL        shift, and go to state 32
+    MINUS_INT_RETERAL  shift, and go to state 33
+    BIT_NOT            shift, and go to state 34
+    TOKEN              shift, and go to state 50
+    BRACE              shift, and go to state 37
+
+    expr  go to state 153
+
+
+State 105
+
+   33 codes: expr CR .
+
+    $default  reduce using rule 33 (codes)
+
+
+State 106
+
+   25 codes: callst CR .
+
+    $default  reduce using rule 25 (codes)
+
+
+State 107
+
+   32 codes: retrnst CR .
+
+    $default  reduce using rule 32 (codes)
+
+
+State 108
+
+   84 ifst: IF expr THEN . codes ENDIF
+   85     | IF expr THEN . codes ELSE codes ENDIF
+   86     | IF expr THEN . codes else_if_list ENDIF
+   87     | IF expr THEN . codes else_if_list ELSE codes ENDIF
+
+    IF                  shift, and go to state 21
+    FOR                 shift, and go to state 22
+    WHILE               shift, and go to state 23
+    DO                  shift, and go to state 24
+    BREAK               shift, and go to state 25
+    CONTINUE            shift, and go to state 26
+    RETRN               shift, and go to state 27
+    INT                 shift, and go to state 28
+    STRING              shift, and go to state 29
+    VOID                shift, and go to state 30
+    STR_RETERAL         shift, and go to state 31
+    INT_RETERAL         shift, and go to state 32
+    MINUS_INT_RETERAL   shift, and go to state 33
+    BIT_NOT             shift, and go to state 34
+    TOKEN               shift, and go to state 35
+    RESERVED_WORD       shift, and go to state 36
+    BRACE               shift, and go to state 37
+    LEFT_INDEX_BRACKET  shift, and go to state 38
+
+    typest         go to state 39
+    var            go to state 40
+    codes          go to state 154
+    array_reteral  go to state 42
+    expr           go to state 43
+    callst         go to state 44
+    ifst           go to state 45
+    forst          go to state 46
+    dowhilest      go to state 47
+    retrnst        go to state 48
+
+
+State 109
+
+   88 forst: FOR TOKEN EQUAL . expr TO expr codes NEXT
+   89      | FOR TOKEN EQUAL . expr TO expr STEP expr codes NEXT
+
+    STR_RETERAL        shift, and go to state 31
+    INT_RETERAL        shift, and go to state 32
+    MINUS_INT_RETERAL  shift, and go to state 33
+    BIT_NOT            shift, and go to state 34
+    TOKEN              shift, and go to state 50
+    BRACE              shift, and go to state 37
+
+    expr  go to state 155
+
+
+State 110
+
+   34 codes: codes . var CR
+   35      | codes . callst CR
+   36      | codes . array_reteral EQUAL callst CR
+   37      | codes . ifst
+   38      | codes . forst
+   39      | codes . dowhilest
+   40      | codes . BREAK CR
+   41      | codes . CONTINUE CR
+   42      | codes . retrnst CR
+   43      | codes . expr CR
+   91 dowhilest: WHILE expr codes . ENDWHILE
+
+    IF                  shift, and go to state 21
+    FOR                 shift, and go to state 22
+    WHILE               shift, and go to state 23
+    DO                  shift, and go to state 24
+    ENDWHILE            shift, and go to state 156
+    BREAK               shift, and go to state 72
+    CONTINUE            shift, and go to state 73
+    RETRN               shift, and go to state 27
+    INT                 shift, and go to state 28
+    STRING              shift, and go to state 29
+    VOID                shift, and go to state 30
+    STR_RETERAL         shift, and go to state 31
+    INT_RETERAL         shift, and go to state 32
+    MINUS_INT_RETERAL   shift, and go to state 33
+    BIT_NOT             shift, and go to state 34
+    TOKEN               shift, and go to state 35
+    RESERVED_WORD       shift, and go to state 36
+    BRACE               shift, and go to state 37
+    LEFT_INDEX_BRACKET  shift, and go to state 38
+
+    typest         go to state 39
+    var            go to state 74
+    array_reteral  go to state 75
+    expr           go to state 76
+    callst         go to state 77
+    ifst           go to state 78
+    forst          go to state 79
+    dowhilest      go to state 80
+    retrnst        go to state 81
+
+
+State 111
+
+   53 expr: expr . PLUS expr
+   54     | expr . MINUS expr
+   55     | expr . ASTA expr
+   56     | expr . SLASH expr
+   57     | expr . MOD expr
+   58     | expr . EQUAL expr
+   59     | expr . EQUAL_EQUAL expr
+   60     | expr . NOT_EQUAL expr
+   61     | expr . LOGICAL_NOT
+   62     | expr . LOGICAL_AND expr
+   63     | expr . LOGICAL_OR expr
+   64     | expr . GRATER_THAN_LEFT expr
+   65     | expr . GRATER_THAN_RIGHT expr
+   66     | expr . EQUAL_GRATER_THAN_LEFT expr
+   67     | expr . EQUAL_GRATER_THAN_RIGHT expr
+   69     | expr . LEFT_SHIFT expr
+   70     | expr . RIGHT_SHIFT expr
+   71     | expr . LEFT_SHIFT_LOGIC expr
+   72     | expr . RIGHT_SHIFT_LOGIC expr
+   73     | expr . BIT_AND expr
+   74     | expr . BIT_OR expr
+   75     | expr . BIT_XOR expr
+   90 dowhilest: DO WHILE expr . codes LOOP
+
+    IF                       shift, and go to state 21
+    FOR                      shift, and go to state 22
+    WHILE                    shift, and go to state 23
+    DO                       shift, and go to state 24
+    BREAK                    shift, and go to state 25
+    CONTINUE                 shift, and go to state 26
+    RETRN                    shift, and go to state 27
+    INT                      shift, and go to state 28
+    STRING                   shift, and go to state 29
+    VOID                     shift, and go to state 30
+    STR_RETERAL              shift, and go to state 31
+    INT_RETERAL              shift, and go to state 32
+    MINUS_INT_RETERAL        shift, and go to state 33
+    EQUAL                    shift, and go to state 83
+    BIT_NOT                  shift, and go to state 34
+    PLUS                     shift, and go to state 84
+    MINUS                    shift, and go to state 85
+    ASTA                     shift, and go to state 86
+    SLASH                    shift, and go to state 87
+    MOD                      shift, and go to state 88
+    LEFT_SHIFT               shift, and go to state 89
+    RIGHT_SHIFT              shift, and go to state 90
+    LEFT_SHIFT_LOGIC         shift, and go to state 91
+    RIGHT_SHIFT_LOGIC        shift, and go to state 92
+    BIT_AND                  shift, and go to state 93
+    BIT_XOR                  shift, and go to state 94
+    BIT_OR                   shift, and go to state 95
+    GRATER_THAN_LEFT         shift, and go to state 96
+    GRATER_THAN_RIGHT        shift, and go to state 97
+    EQUAL_GRATER_THAN_LEFT   shift, and go to state 98
+    EQUAL_GRATER_THAN_RIGHT  shift, and go to state 99
+    EQUAL_EQUAL              shift, and go to state 100
+    LOGICAL_NOT              shift, and go to state 101
+    NOT_EQUAL                shift, and go to state 102
+    LOGICAL_AND              shift, and go to state 103
+    LOGICAL_OR               shift, and go to state 104
+    TOKEN                    shift, and go to state 35
+    RESERVED_WORD            shift, and go to state 36
+    BRACE                    shift, and go to state 37
+    LEFT_INDEX_BRACKET       shift, and go to state 38
+
+    typest         go to state 39
+    var            go to state 40
+    codes          go to state 157
+    array_reteral  go to state 42
+    expr           go to state 43
+    callst         go to state 44
+    ifst           go to state 45
+    forst          go to state 46
+    dowhilest      go to state 47
+    retrnst        go to state 48
+
+
+State 112
+
+   53 expr: expr . PLUS expr
+   54     | expr . MINUS expr
+   55     | expr . ASTA expr
+   56     | expr . SLASH expr
+   57     | expr . MOD expr
+   58     | expr . EQUAL expr
+   59     | expr . EQUAL_EQUAL expr
+   60     | expr . NOT_EQUAL expr
+   61     | expr . LOGICAL_NOT
+   62     | expr . LOGICAL_AND expr
+   63     | expr . LOGICAL_OR expr
+   64     | expr . GRATER_THAN_LEFT expr
+   65     | expr . GRATER_THAN_RIGHT expr
+   66     | expr . EQUAL_GRATER_THAN_LEFT expr
+   67     | expr . EQUAL_GRATER_THAN_RIGHT expr
+   69     | expr . LEFT_SHIFT expr
+   70     | expr . RIGHT_SHIFT expr
+   71     | expr . LEFT_SHIFT_LOGIC expr
+   72     | expr . RIGHT_SHIFT_LOGIC expr
+   73     | expr . BIT_AND expr
+   74     | expr . BIT_OR expr
+   75     | expr . BIT_XOR expr
+   81 manytokenst: expr .
+
+    EQUAL                    shift, and go to state 83
+    PLUS                     shift, and go to state 84
+    MINUS                    shift, and go to state 85
+    ASTA                     shift, and go to state 86
+    SLASH                    shift, and go to state 87
+    MOD                      shift, and go to state 88
+    LEFT_SHIFT               shift, and go to state 89
+    RIGHT_SHIFT              shift, and go to state 90
+    LEFT_SHIFT_LOGIC         shift, and go to state 91
+    RIGHT_SHIFT_LOGIC        shift, and go to state 92
+    BIT_AND                  shift, and go to state 93
+    BIT_XOR                  shift, and go to state 94
+    BIT_OR                   shift, and go to state 95
+    GRATER_THAN_LEFT         shift, and go to state 96
+    GRATER_THAN_RIGHT        shift, and go to state 97
+    EQUAL_GRATER_THAN_LEFT   shift, and go to state 98
+    EQUAL_GRATER_THAN_RIGHT  shift, and go to state 99
+    EQUAL_EQUAL              shift, and go to state 100
+    LOGICAL_NOT              shift, and go to state 101
+    NOT_EQUAL                shift, and go to state 102
+    LOGICAL_AND              shift, and go to state 103
+    LOGICAL_OR               shift, and go to state 104
+
+    $default  reduce using rule 81 (manytokenst)
+
+
+State 113
+
+   80 manytokenst: manytokenst . COMMA expr
+   93 retrnst: RETRN LEFT_INDEX_BRACKET manytokenst . RIGHT_INDEX_BRACKET
+
+    COMMA                shift, and go to state 158
+    RIGHT_INDEX_BRACKET  shift, and go to state 159
+
+
+State 114
+
+   16 var: INT TOKEN LEFT_INDEX_BRACKET . INT_RETERAL RIGHT_INDEX_BRACKET
+   18    | INT TOKEN LEFT_INDEX_BRACKET . INT_RETERAL RIGHT_INDEX_BRACKET EQUAL LEFT_INDEX_BRACKET initialize_intval_st RIGHT_INDEX_BRACKET
+
+    INT_RETERAL  shift, and go to state 160
+
+
+State 115
+
+   17 var: STRING TOKEN LEFT_INDEX_BRACKET . INT_RETERAL RIGHT_INDEX_BRACKET
+   19    | STRING TOKEN LEFT_INDEX_BRACKET . INT_RETERAL RIGHT_INDEX_BRACKET EQUAL LEFT_INDEX_BRACKET initialize_strval_st RIGHT_INDEX_BRACKET
+
+    INT_RETERAL  shift, and go to state 161
+
+
+State 116
+
+   78 callst: TOKEN BRACE manytokenst . END_BRACE
+   80 manytokenst: manytokenst . COMMA expr
+
+    COMMA      shift, and go to state 158
+    END_BRACE  shift, and go to state 162
+
+
+State 117
+
+   53 expr: expr . PLUS expr
+   54     | expr . MINUS expr
+   55     | expr . ASTA expr
+   56     | expr . SLASH expr
+   57     | expr . MOD expr
+   58     | expr . EQUAL expr
+   59     | expr . EQUAL_EQUAL expr
+   60     | expr . NOT_EQUAL expr
+   61     | expr . LOGICAL_NOT
+   62     | expr . LOGICAL_AND expr
+   63     | expr . LOGICAL_OR expr
+   64     | expr . GRATER_THAN_LEFT expr
+   65     | expr . GRATER_THAN_RIGHT expr
+   66     | expr . EQUAL_GRATER_THAN_LEFT expr
+   67     | expr . EQUAL_GRATER_THAN_RIGHT expr
+   69     | expr . LEFT_SHIFT expr
+   70     | expr . RIGHT_SHIFT expr
+   71     | expr . LEFT_SHIFT_LOGIC expr
+   72     | expr . RIGHT_SHIFT_LOGIC expr
+   73     | expr . BIT_AND expr
+   74     | expr . BIT_OR expr
+   75     | expr . BIT_XOR expr
+   77     | TOKEN LEFT_INDEX_BRACKET expr . RIGHT_INDEX_BRACKET
+
+    EQUAL                    shift, and go to state 83
+    PLUS                     shift, and go to state 84
+    MINUS                    shift, and go to state 85
+    ASTA                     shift, and go to state 86
+    SLASH                    shift, and go to state 87
+    MOD                      shift, and go to state 88
+    LEFT_SHIFT               shift, and go to state 89
+    RIGHT_SHIFT              shift, and go to state 90
+    LEFT_SHIFT_LOGIC         shift, and go to state 91
+    RIGHT_SHIFT_LOGIC        shift, and go to state 92
+    BIT_AND                  shift, and go to state 93
+    BIT_XOR                  shift, and go to state 94
+    BIT_OR                   shift, and go to state 95
+    GRATER_THAN_LEFT         shift, and go to state 96
+    GRATER_THAN_RIGHT        shift, and go to state 97
+    EQUAL_GRATER_THAN_LEFT   shift, and go to state 98
+    EQUAL_GRATER_THAN_RIGHT  shift, and go to state 99
+    EQUAL_EQUAL              shift, and go to state 100
+    LOGICAL_NOT              shift, and go to state 101
+    NOT_EQUAL                shift, and go to state 102
+    LOGICAL_AND              shift, and go to state 103
+    LOGICAL_OR               shift, and go to state 104
+    RIGHT_INDEX_BRACKET      shift, and go to state 163
+
+
+State 118
+
+   79 callst: RESERVED_WORD BRACE manytokenst . END_BRACE
+   80 manytokenst: manytokenst . COMMA expr
+
+    COMMA      shift, and go to state 158
+    END_BRACE  shift, and go to state 164
+
+
+State 119
+
+   52 expr: BRACE expr END_BRACE .
+
+    $default  reduce using rule 52 (expr)
+
+
+State 120
+
+   45 accessable_var: TOKEN LEFT_INDEX_BRACKET . expr RIGHT_INDEX_BRACKET
+
+    STR_RETERAL        shift, and go to state 31
+    INT_RETERAL        shift, and go to state 32
+    MINUS_INT_RETERAL  shift, and go to state 33
+    BIT_NOT            shift, and go to state 34
+    TOKEN              shift, and go to state 50
+    BRACE              shift, and go to state 37
+
+    expr  go to state 165
+
+
+State 121
+
+   46 return_vars: return_vars COMMA . accessable_var
+
+    TOKEN  shift, and go to state 66
+
+    accessable_var  go to state 166
+
+
+State 122
+
+   48 array_reteral: LEFT_INDEX_BRACKET return_vars RIGHT_INDEX_BRACKET .
+
+    $default  reduce using rule 48 (array_reteral)
+
+
+State 123
+
+   15 var: typest TOKEN EQUAL . INT_RETERAL
+   20    | typest TOKEN EQUAL . STR_RETERAL
+
+    STR_RETERAL  shift, and go to state 167
+    INT_RETERAL  shift, and go to state 168
+
+
+State 124
+
+   40 codes: codes BREAK CR .
+
+    $default  reduce using rule 40 (codes)
+
+
+State 125
+
+   41 codes: codes CONTINUE CR .
+
+    $default  reduce using rule 41 (codes)
+
+
+State 126
+
+   34 codes: codes var CR .
+
+    $default  reduce using rule 34 (codes)
+
+
+State 127
+
+   36 codes: codes array_reteral EQUAL . callst CR
+
+    TOKEN          shift, and go to state 131
+    RESERVED_WORD  shift, and go to state 36
+
+    callst  go to state 169
+
+
+State 128
+
+   43 codes: codes expr CR .
+
+    $default  reduce using rule 43 (codes)
+
+
+State 129
+
+   35 codes: codes callst CR .
+
+    $default  reduce using rule 35 (codes)
+
+
+State 130
+
+   42 codes: codes retrnst CR .
+
+    $default  reduce using rule 42 (codes)
+
+
+State 131
+
+   78 callst: TOKEN . BRACE manytokenst END_BRACE
+
+    BRACE  shift, and go to state 62
+
+
+State 132
+
+   26 codes: array_reteral EQUAL callst . CR
+
+    CR  shift, and go to state 170
+
+
+State 133
+
+   53 expr: expr . PLUS expr
+   54     | expr . MINUS expr
+   55     | expr . ASTA expr
+   56     | expr . SLASH expr
+   57     | expr . MOD expr
+   58     | expr . EQUAL expr
+   58     | expr EQUAL expr .
+   59     | expr . EQUAL_EQUAL expr
+   60     | expr . NOT_EQUAL expr
+   61     | expr . LOGICAL_NOT
+   62     | expr . LOGICAL_AND expr
+   63     | expr . LOGICAL_OR expr
+   64     | expr . GRATER_THAN_LEFT expr
+   65     | expr . GRATER_THAN_RIGHT expr
+   66     | expr . EQUAL_GRATER_THAN_LEFT expr
+   67     | expr . EQUAL_GRATER_THAN_RIGHT expr
+   69     | expr . LEFT_SHIFT expr
+   70     | expr . RIGHT_SHIFT expr
+   71     | expr . LEFT_SHIFT_LOGIC expr
+   72     | expr . RIGHT_SHIFT_LOGIC expr
+   73     | expr . BIT_AND expr
+   74     | expr . BIT_OR expr
+   75     | expr . BIT_XOR expr
+
+    EQUAL                    shift, and go to state 83
+    PLUS                     shift, and go to state 84
+    MINUS                    shift, and go to state 85
+    ASTA                     shift, and go to state 86
+    SLASH                    shift, and go to state 87
+    MOD                      shift, and go to state 88
+    LEFT_SHIFT               shift, and go to state 89
+    RIGHT_SHIFT              shift, and go to state 90
+    LEFT_SHIFT_LOGIC         shift, and go to state 91
+    RIGHT_SHIFT_LOGIC        shift, and go to state 92
+    BIT_AND                  shift, and go to state 93
+    BIT_XOR                  shift, and go to state 94
+    BIT_OR                   shift, and go to state 95
+    GRATER_THAN_LEFT         shift, and go to state 96
+    GRATER_THAN_RIGHT        shift, and go to state 97
+    EQUAL_GRATER_THAN_LEFT   shift, and go to state 98
+    EQUAL_GRATER_THAN_RIGHT  shift, and go to state 99
+    EQUAL_EQUAL              shift, and go to state 100
+    LOGICAL_NOT              shift, and go to state 101
+    NOT_EQUAL                shift, and go to state 102
+    LOGICAL_AND              shift, and go to state 103
+    LOGICAL_OR               shift, and go to state 104
+
+    $default  reduce using rule 58 (expr)
+
+
+State 134
+
+   53 expr: expr . PLUS expr
+   53     | expr PLUS expr .
+   54     | expr . MINUS expr
+   55     | expr . ASTA expr
+   56     | expr . SLASH expr
+   57     | expr . MOD expr
+   58     | expr . EQUAL expr
+   59     | expr . EQUAL_EQUAL expr
+   60     | expr . NOT_EQUAL expr
+   61     | expr . LOGICAL_NOT
+   62     | expr . LOGICAL_AND expr
+   63     | expr . LOGICAL_OR expr
+   64     | expr . GRATER_THAN_LEFT expr
+   65     | expr . GRATER_THAN_RIGHT expr
+   66     | expr . EQUAL_GRATER_THAN_LEFT expr
+   67     | expr . EQUAL_GRATER_THAN_RIGHT expr
+   69     | expr . LEFT_SHIFT expr
+   70     | expr . RIGHT_SHIFT expr
+   71     | expr . LEFT_SHIFT_LOGIC expr
+   72     | expr . RIGHT_SHIFT_LOGIC expr
+   73     | expr . BIT_AND expr
+   74     | expr . BIT_OR expr
+   75     | expr . BIT_XOR expr
+
+    LEFT_SHIFT               shift, and go to state 89
+    RIGHT_SHIFT              shift, and go to state 90
+    LEFT_SHIFT_LOGIC         shift, and go to state 91
+    RIGHT_SHIFT_LOGIC        shift, and go to state 92
+    BIT_AND                  shift, and go to state 93
+    BIT_XOR                  shift, and go to state 94
+    BIT_OR                   shift, and go to state 95
+    GRATER_THAN_LEFT         shift, and go to state 96
+    GRATER_THAN_RIGHT        shift, and go to state 97
+    EQUAL_GRATER_THAN_LEFT   shift, and go to state 98
+    EQUAL_GRATER_THAN_RIGHT  shift, and go to state 99
+    EQUAL_EQUAL              shift, and go to state 100
+    LOGICAL_NOT              shift, and go to state 101
+    NOT_EQUAL                shift, and go to state 102
+    LOGICAL_AND              shift, and go to state 103
+    LOGICAL_OR               shift, and go to state 104
+
+    $default  reduce using rule 53 (expr)
+
+
+State 135
+
+   53 expr: expr . PLUS expr
+   54     | expr . MINUS expr
+   54     | expr MINUS expr .
+   55     | expr . ASTA expr
+   56     | expr . SLASH expr
+   57     | expr . MOD expr
+   58     | expr . EQUAL expr
+   59     | expr . EQUAL_EQUAL expr
+   60     | expr . NOT_EQUAL expr
+   61     | expr . LOGICAL_NOT
+   62     | expr . LOGICAL_AND expr
+   63     | expr . LOGICAL_OR expr
+   64     | expr . GRATER_THAN_LEFT expr
+   65     | expr . GRATER_THAN_RIGHT expr
+   66     | expr . EQUAL_GRATER_THAN_LEFT expr
+   67     | expr . EQUAL_GRATER_THAN_RIGHT expr
+   69     | expr . LEFT_SHIFT expr
+   70     | expr . RIGHT_SHIFT expr
+   71     | expr . LEFT_SHIFT_LOGIC expr
+   72     | expr . RIGHT_SHIFT_LOGIC expr
+   73     | expr . BIT_AND expr
+   74     | expr . BIT_OR expr
+   75     | expr . BIT_XOR expr
+
+    LEFT_SHIFT               shift, and go to state 89
+    RIGHT_SHIFT              shift, and go to state 90
+    LEFT_SHIFT_LOGIC         shift, and go to state 91
+    RIGHT_SHIFT_LOGIC        shift, and go to state 92
+    BIT_AND                  shift, and go to state 93
+    BIT_XOR                  shift, and go to state 94
+    BIT_OR                   shift, and go to state 95
+    GRATER_THAN_LEFT         shift, and go to state 96
+    GRATER_THAN_RIGHT        shift, and go to state 97
+    EQUAL_GRATER_THAN_LEFT   shift, and go to state 98
+    EQUAL_GRATER_THAN_RIGHT  shift, and go to state 99
+    EQUAL_EQUAL              shift, and go to state 100
+    LOGICAL_NOT              shift, and go to state 101
+    NOT_EQUAL                shift, and go to state 102
+    LOGICAL_AND              shift, and go to state 103
+    LOGICAL_OR               shift, and go to state 104
+
+    $default  reduce using rule 54 (expr)
+
+
+State 136
+
+   53 expr: expr . PLUS expr
+   54     | expr . MINUS expr
+   55     | expr . ASTA expr
+   55     | expr ASTA expr .
+   56     | expr . SLASH expr
+   57     | expr . MOD expr
+   58     | expr . EQUAL expr
+   59     | expr . EQUAL_EQUAL expr
+   60     | expr . NOT_EQUAL expr
+   61     | expr . LOGICAL_NOT
+   62     | expr . LOGICAL_AND expr
+   63     | expr . LOGICAL_OR expr
+   64     | expr . GRATER_THAN_LEFT expr
+   65     | expr . GRATER_THAN_RIGHT expr
+   66     | expr . EQUAL_GRATER_THAN_LEFT expr
+   67     | expr . EQUAL_GRATER_THAN_RIGHT expr
+   69     | expr . LEFT_SHIFT expr
+   70     | expr . RIGHT_SHIFT expr
+   71     | expr . LEFT_SHIFT_LOGIC expr
+   72     | expr . RIGHT_SHIFT_LOGIC expr
+   73     | expr . BIT_AND expr
+   74     | expr . BIT_OR expr
+   75     | expr . BIT_XOR expr
+
+    LEFT_SHIFT               shift, and go to state 89
+    RIGHT_SHIFT              shift, and go to state 90
+    LEFT_SHIFT_LOGIC         shift, and go to state 91
+    RIGHT_SHIFT_LOGIC        shift, and go to state 92
+    BIT_AND                  shift, and go to state 93
+    BIT_XOR                  shift, and go to state 94
+    BIT_OR                   shift, and go to state 95
+    GRATER_THAN_LEFT         shift, and go to state 96
+    GRATER_THAN_RIGHT        shift, and go to state 97
+    EQUAL_GRATER_THAN_LEFT   shift, and go to state 98
+    EQUAL_GRATER_THAN_RIGHT  shift, and go to state 99
+    EQUAL_EQUAL              shift, and go to state 100
+    LOGICAL_NOT              shift, and go to state 101
+    NOT_EQUAL                shift, and go to state 102
+    LOGICAL_AND              shift, and go to state 103
+    LOGICAL_OR               shift, and go to state 104
+
+    $default  reduce using rule 55 (expr)
+
+
+State 137
+
+   53 expr: expr . PLUS expr
+   54     | expr . MINUS expr
+   55     | expr . ASTA expr
+   56     | expr . SLASH expr
+   56     | expr SLASH expr .
+   57     | expr . MOD expr
+   58     | expr . EQUAL expr
+   59     | expr . EQUAL_EQUAL expr
+   60     | expr . NOT_EQUAL expr
+   61     | expr . LOGICAL_NOT
+   62     | expr . LOGICAL_AND expr
+   63     | expr . LOGICAL_OR expr
+   64     | expr . GRATER_THAN_LEFT expr
+   65     | expr . GRATER_THAN_RIGHT expr
+   66     | expr . EQUAL_GRATER_THAN_LEFT expr
+   67     | expr . EQUAL_GRATER_THAN_RIGHT expr
+   69     | expr . LEFT_SHIFT expr
+   70     | expr . RIGHT_SHIFT expr
+   71     | expr . LEFT_SHIFT_LOGIC expr
+   72     | expr . RIGHT_SHIFT_LOGIC expr
+   73     | expr . BIT_AND expr
+   74     | expr . BIT_OR expr
+   75     | expr . BIT_XOR expr
+
+    LEFT_SHIFT               shift, and go to state 89
+    RIGHT_SHIFT              shift, and go to state 90
+    LEFT_SHIFT_LOGIC         shift, and go to state 91
+    RIGHT_SHIFT_LOGIC        shift, and go to state 92
+    BIT_AND                  shift, and go to state 93
+    BIT_XOR                  shift, and go to state 94
+    BIT_OR                   shift, and go to state 95
+    GRATER_THAN_LEFT         shift, and go to state 96
+    GRATER_THAN_RIGHT        shift, and go to state 97
+    EQUAL_GRATER_THAN_LEFT   shift, and go to state 98
+    EQUAL_GRATER_THAN_RIGHT  shift, and go to state 99
+    EQUAL_EQUAL              shift, and go to state 100
+    LOGICAL_NOT              shift, and go to state 101
+    NOT_EQUAL                shift, and go to state 102
+    LOGICAL_AND              shift, and go to state 103
+    LOGICAL_OR               shift, and go to state 104
+
+    $default  reduce using rule 56 (expr)
+
+
+State 138
+
+   53 expr: expr . PLUS expr
+   54     | expr . MINUS expr
+   55     | expr . ASTA expr
+   56     | expr . SLASH expr
+   57     | expr . MOD expr
+   57     | expr MOD expr .
+   58     | expr . EQUAL expr
+   59     | expr . EQUAL_EQUAL expr
+   60     | expr . NOT_EQUAL expr
+   61     | expr . LOGICAL_NOT
+   62     | expr . LOGICAL_AND expr
+   63     | expr . LOGICAL_OR expr
+   64     | expr . GRATER_THAN_LEFT expr
+   65     | expr . GRATER_THAN_RIGHT expr
+   66     | expr . EQUAL_GRATER_THAN_LEFT expr
+   67     | expr . EQUAL_GRATER_THAN_RIGHT expr
+   69     | expr . LEFT_SHIFT expr
+   70     | expr . RIGHT_SHIFT expr
+   71     | expr . LEFT_SHIFT_LOGIC expr
+   72     | expr . RIGHT_SHIFT_LOGIC expr
+   73     | expr . BIT_AND expr
+   74     | expr . BIT_OR expr
+   75     | expr . BIT_XOR expr
+
+    LEFT_SHIFT               shift, and go to state 89
+    RIGHT_SHIFT              shift, and go to state 90
+    LEFT_SHIFT_LOGIC         shift, and go to state 91
+    RIGHT_SHIFT_LOGIC        shift, and go to state 92
+    BIT_AND                  shift, and go to state 93
+    BIT_XOR                  shift, and go to state 94
+    BIT_OR                   shift, and go to state 95
+    GRATER_THAN_LEFT         shift, and go to state 96
+    GRATER_THAN_RIGHT        shift, and go to state 97
+    EQUAL_GRATER_THAN_LEFT   shift, and go to state 98
+    EQUAL_GRATER_THAN_RIGHT  shift, and go to state 99
+    EQUAL_EQUAL              shift, and go to state 100
+    LOGICAL_NOT              shift, and go to state 101
+    NOT_EQUAL                shift, and go to state 102
+    LOGICAL_AND              shift, and go to state 103
+    LOGICAL_OR               shift, and go to state 104
+
+    $default  reduce using rule 57 (expr)
+
+
+State 139
+
+   53 expr: expr . PLUS expr
+   54     | expr . MINUS expr
+   55     | expr . ASTA expr
+   56     | expr . SLASH expr
+   57     | expr . MOD expr
+   58     | expr . EQUAL expr
+   59     | expr . EQUAL_EQUAL expr
+   60     | expr . NOT_EQUAL expr
+   61     | expr . LOGICAL_NOT
+   62     | expr . LOGICAL_AND expr
+   63     | expr . LOGICAL_OR expr
+   64     | expr . GRATER_THAN_LEFT expr
+   65     | expr . GRATER_THAN_RIGHT expr
+   66     | expr . EQUAL_GRATER_THAN_LEFT expr
+   67     | expr . EQUAL_GRATER_THAN_RIGHT expr
+   69     | expr . LEFT_SHIFT expr
+   69     | expr LEFT_SHIFT expr .
+   70     | expr . RIGHT_SHIFT expr
+   71     | expr . LEFT_SHIFT_LOGIC expr
+   72     | expr . RIGHT_SHIFT_LOGIC expr
+   73     | expr . BIT_AND expr
+   74     | expr . BIT_OR expr
+   75     | expr . BIT_XOR expr
+
+    BIT_AND                  shift, and go to state 93
+    BIT_XOR                  shift, and go to state 94
+    BIT_OR                   shift, and go to state 95
+    GRATER_THAN_LEFT         shift, and go to state 96
+    GRATER_THAN_RIGHT        shift, and go to state 97
+    EQUAL_GRATER_THAN_LEFT   shift, and go to state 98
+    EQUAL_GRATER_THAN_RIGHT  shift, and go to state 99
+    EQUAL_EQUAL              shift, and go to state 100
+    LOGICAL_NOT              shift, and go to state 101
+    NOT_EQUAL                shift, and go to state 102
+    LOGICAL_AND              shift, and go to state 103
+    LOGICAL_OR               shift, and go to state 104
+
+    $default  reduce using rule 69 (expr)
+
+
+State 140
+
+   53 expr: expr . PLUS expr
+   54     | expr . MINUS expr
+   55     | expr . ASTA expr
+   56     | expr . SLASH expr
+   57     | expr . MOD expr
+   58     | expr . EQUAL expr
+   59     | expr . EQUAL_EQUAL expr
+   60     | expr . NOT_EQUAL expr
+   61     | expr . LOGICAL_NOT
+   62     | expr . LOGICAL_AND expr
+   63     | expr . LOGICAL_OR expr
+   64     | expr . GRATER_THAN_LEFT expr
+   65     | expr . GRATER_THAN_RIGHT expr
+   66     | expr . EQUAL_GRATER_THAN_LEFT expr
+   67     | expr . EQUAL_GRATER_THAN_RIGHT expr
+   69     | expr . LEFT_SHIFT expr
+   70     | expr . RIGHT_SHIFT expr
+   70     | expr RIGHT_SHIFT expr .
+   71     | expr . LEFT_SHIFT_LOGIC expr
+   72     | expr . RIGHT_SHIFT_LOGIC expr
+   73     | expr . BIT_AND expr
+   74     | expr . BIT_OR expr
+   75     | expr . BIT_XOR expr
+
+    BIT_AND                  shift, and go to state 93
+    BIT_XOR                  shift, and go to state 94
+    BIT_OR                   shift, and go to state 95
+    GRATER_THAN_LEFT         shift, and go to state 96
+    GRATER_THAN_RIGHT        shift, and go to state 97
+    EQUAL_GRATER_THAN_LEFT   shift, and go to state 98
+    EQUAL_GRATER_THAN_RIGHT  shift, and go to state 99
+    EQUAL_EQUAL              shift, and go to state 100
+    LOGICAL_NOT              shift, and go to state 101
+    NOT_EQUAL                shift, and go to state 102
+    LOGICAL_AND              shift, and go to state 103
+    LOGICAL_OR               shift, and go to state 104
+
+    $default  reduce using rule 70 (expr)
+
+
+State 141
+
+   53 expr: expr . PLUS expr
+   54     | expr . MINUS expr
+   55     | expr . ASTA expr
+   56     | expr . SLASH expr
+   57     | expr . MOD expr
+   58     | expr . EQUAL expr
+   59     | expr . EQUAL_EQUAL expr
+   60     | expr . NOT_EQUAL expr
+   61     | expr . LOGICAL_NOT
+   62     | expr . LOGICAL_AND expr
+   63     | expr . LOGICAL_OR expr
+   64     | expr . GRATER_THAN_LEFT expr
+   65     | expr . GRATER_THAN_RIGHT expr
+   66     | expr . EQUAL_GRATER_THAN_LEFT expr
+   67     | expr . EQUAL_GRATER_THAN_RIGHT expr
+   69     | expr . LEFT_SHIFT expr
+   70     | expr . RIGHT_SHIFT expr
+   71     | expr . LEFT_SHIFT_LOGIC expr
+   71     | expr LEFT_SHIFT_LOGIC expr .
+   72     | expr . RIGHT_SHIFT_LOGIC expr
+   73     | expr . BIT_AND expr
+   74     | expr . BIT_OR expr
+   75     | expr . BIT_XOR expr
+
+    BIT_AND                  shift, and go to state 93
+    BIT_XOR                  shift, and go to state 94
+    BIT_OR                   shift, and go to state 95
+    GRATER_THAN_LEFT         shift, and go to state 96
+    GRATER_THAN_RIGHT        shift, and go to state 97
+    EQUAL_GRATER_THAN_LEFT   shift, and go to state 98
+    EQUAL_GRATER_THAN_RIGHT  shift, and go to state 99
+    EQUAL_EQUAL              shift, and go to state 100
+    LOGICAL_NOT              shift, and go to state 101
+    NOT_EQUAL                shift, and go to state 102
+    LOGICAL_AND              shift, and go to state 103
+    LOGICAL_OR               shift, and go to state 104
+
+    $default  reduce using rule 71 (expr)
+
+
+State 142
+
+   53 expr: expr . PLUS expr
+   54     | expr . MINUS expr
+   55     | expr . ASTA expr
+   56     | expr . SLASH expr
+   57     | expr . MOD expr
+   58     | expr . EQUAL expr
+   59     | expr . EQUAL_EQUAL expr
+   60     | expr . NOT_EQUAL expr
+   61     | expr . LOGICAL_NOT
+   62     | expr . LOGICAL_AND expr
+   63     | expr . LOGICAL_OR expr
+   64     | expr . GRATER_THAN_LEFT expr
+   65     | expr . GRATER_THAN_RIGHT expr
+   66     | expr . EQUAL_GRATER_THAN_LEFT expr
+   67     | expr . EQUAL_GRATER_THAN_RIGHT expr
+   69     | expr . LEFT_SHIFT expr
+   70     | expr . RIGHT_SHIFT expr
+   71     | expr . LEFT_SHIFT_LOGIC expr
+   72     | expr . RIGHT_SHIFT_LOGIC expr
+   72     | expr RIGHT_SHIFT_LOGIC expr .
+   73     | expr . BIT_AND expr
+   74     | expr . BIT_OR expr
+   75     | expr . BIT_XOR expr
+
+    BIT_AND                  shift, and go to state 93
+    BIT_XOR                  shift, and go to state 94
+    BIT_OR                   shift, and go to state 95
+    GRATER_THAN_LEFT         shift, and go to state 96
+    GRATER_THAN_RIGHT        shift, and go to state 97
+    EQUAL_GRATER_THAN_LEFT   shift, and go to state 98
+    EQUAL_GRATER_THAN_RIGHT  shift, and go to state 99
+    EQUAL_EQUAL              shift, and go to state 100
+    LOGICAL_NOT              shift, and go to state 101
+    NOT_EQUAL                shift, and go to state 102
+    LOGICAL_AND              shift, and go to state 103
+    LOGICAL_OR               shift, and go to state 104
+
+    $default  reduce using rule 72 (expr)
+
+
+State 143
+
+   53 expr: expr . PLUS expr
+   54     | expr . MINUS expr
+   55     | expr . ASTA expr
+   56     | expr . SLASH expr
+   57     | expr . MOD expr
+   58     | expr . EQUAL expr
+   59     | expr . EQUAL_EQUAL expr
+   60     | expr . NOT_EQUAL expr
+   61     | expr . LOGICAL_NOT
+   62     | expr . LOGICAL_AND expr
+   63     | expr . LOGICAL_OR expr
+   64     | expr . GRATER_THAN_LEFT expr
+   65     | expr . GRATER_THAN_RIGHT expr
+   66     | expr . EQUAL_GRATER_THAN_LEFT expr
+   67     | expr . EQUAL_GRATER_THAN_RIGHT expr
+   69     | expr . LEFT_SHIFT expr
+   70     | expr . RIGHT_SHIFT expr
+   71     | expr . LEFT_SHIFT_LOGIC expr
+   72     | expr . RIGHT_SHIFT_LOGIC expr
+   73     | expr . BIT_AND expr
+   73     | expr BIT_AND expr .
+   74     | expr . BIT_OR expr
+   75     | expr . BIT_XOR expr
+
+    $default  reduce using rule 73 (expr)
+
+
+State 144
+
+   53 expr: expr . PLUS expr
+   54     | expr . MINUS expr
+   55     | expr . ASTA expr
+   56     | expr . SLASH expr
+   57     | expr . MOD expr
+   58     | expr . EQUAL expr
+   59     | expr . EQUAL_EQUAL expr
+   60     | expr . NOT_EQUAL expr
+   61     | expr . LOGICAL_NOT
+   62     | expr . LOGICAL_AND expr
+   63     | expr . LOGICAL_OR expr
+   64     | expr . GRATER_THAN_LEFT expr
+   65     | expr . GRATER_THAN_RIGHT expr
+   66     | expr . EQUAL_GRATER_THAN_LEFT expr
+   67     | expr . EQUAL_GRATER_THAN_RIGHT expr
+   69     | expr . LEFT_SHIFT expr
+   70     | expr . RIGHT_SHIFT expr
+   71     | expr . LEFT_SHIFT_LOGIC expr
+   72     | expr . RIGHT_SHIFT_LOGIC expr
+   73     | expr . BIT_AND expr
+   74     | expr . BIT_OR expr
+   75     | expr . BIT_XOR expr
+   75     | expr BIT_XOR expr .
+
+    $default  reduce using rule 75 (expr)
+
+
+State 145
+
+   53 expr: expr . PLUS expr
+   54     | expr . MINUS expr
+   55     | expr . ASTA expr
+   56     | expr . SLASH expr
+   57     | expr . MOD expr
+   58     | expr . EQUAL expr
+   59     | expr . EQUAL_EQUAL expr
+   60     | expr . NOT_EQUAL expr
+   61     | expr . LOGICAL_NOT
+   62     | expr . LOGICAL_AND expr
+   63     | expr . LOGICAL_OR expr
+   64     | expr . GRATER_THAN_LEFT expr
+   65     | expr . GRATER_THAN_RIGHT expr
+   66     | expr . EQUAL_GRATER_THAN_LEFT expr
+   67     | expr . EQUAL_GRATER_THAN_RIGHT expr
+   69     | expr . LEFT_SHIFT expr
+   70     | expr . RIGHT_SHIFT expr
+   71     | expr . LEFT_SHIFT_LOGIC expr
+   72     | expr . RIGHT_SHIFT_LOGIC expr
+   73     | expr . BIT_AND expr
+   74     | expr . BIT_OR expr
+   74     | expr BIT_OR expr .
+   75     | expr . BIT_XOR expr
+
+    $default  reduce using rule 74 (expr)
+
+
+State 146
+
+   53 expr: expr . PLUS expr
+   54     | expr . MINUS expr
+   55     | expr . ASTA expr
+   56     | expr . SLASH expr
+   57     | expr . MOD expr
+   58     | expr . EQUAL expr
+   59     | expr . EQUAL_EQUAL expr
+   60     | expr . NOT_EQUAL expr
+   61     | expr . LOGICAL_NOT
+   62     | expr . LOGICAL_AND expr
+   63     | expr . LOGICAL_OR expr
+   64     | expr . GRATER_THAN_LEFT expr
+   64     | expr GRATER_THAN_LEFT expr .
+   65     | expr . GRATER_THAN_RIGHT expr
+   66     | expr . EQUAL_GRATER_THAN_LEFT expr
+   67     | expr . EQUAL_GRATER_THAN_RIGHT expr
+   69     | expr . LEFT_SHIFT expr
+   70     | expr . RIGHT_SHIFT expr
+   71     | expr . LEFT_SHIFT_LOGIC expr
+   72     | expr . RIGHT_SHIFT_LOGIC expr
+   73     | expr . BIT_AND expr
+   74     | expr . BIT_OR expr
+   75     | expr . BIT_XOR expr
+
+    $default  reduce using rule 64 (expr)
+
+
+State 147
+
+   53 expr: expr . PLUS expr
+   54     | expr . MINUS expr
+   55     | expr . ASTA expr
+   56     | expr . SLASH expr
+   57     | expr . MOD expr
+   58     | expr . EQUAL expr
+   59     | expr . EQUAL_EQUAL expr
+   60     | expr . NOT_EQUAL expr
+   61     | expr . LOGICAL_NOT
+   62     | expr . LOGICAL_AND expr
+   63     | expr . LOGICAL_OR expr
+   64     | expr . GRATER_THAN_LEFT expr
+   65     | expr . GRATER_THAN_RIGHT expr
+   65     | expr GRATER_THAN_RIGHT expr .
+   66     | expr . EQUAL_GRATER_THAN_LEFT expr
+   67     | expr . EQUAL_GRATER_THAN_RIGHT expr
+   69     | expr . LEFT_SHIFT expr
+   70     | expr . RIGHT_SHIFT expr
+   71     | expr . LEFT_SHIFT_LOGIC expr
+   72     | expr . RIGHT_SHIFT_LOGIC expr
+   73     | expr . BIT_AND expr
+   74     | expr . BIT_OR expr
+   75     | expr . BIT_XOR expr
+
+    $default  reduce using rule 65 (expr)
+
+
+State 148
+
+   53 expr: expr . PLUS expr
+   54     | expr . MINUS expr
+   55     | expr . ASTA expr
+   56     | expr . SLASH expr
+   57     | expr . MOD expr
+   58     | expr . EQUAL expr
+   59     | expr . EQUAL_EQUAL expr
+   60     | expr . NOT_EQUAL expr
+   61     | expr . LOGICAL_NOT
+   62     | expr . LOGICAL_AND expr
+   63     | expr . LOGICAL_OR expr
+   64     | expr . GRATER_THAN_LEFT expr
+   65     | expr . GRATER_THAN_RIGHT expr
+   66     | expr . EQUAL_GRATER_THAN_LEFT expr
+   66     | expr EQUAL_GRATER_THAN_LEFT expr .
+   67     | expr . EQUAL_GRATER_THAN_RIGHT expr
+   69     | expr . LEFT_SHIFT expr
+   70     | expr . RIGHT_SHIFT expr
+   71     | expr . LEFT_SHIFT_LOGIC expr
+   72     | expr . RIGHT_SHIFT_LOGIC expr
+   73     | expr . BIT_AND expr
+   74     | expr . BIT_OR expr
+   75     | expr . BIT_XOR expr
+
+    $default  reduce using rule 66 (expr)
+
+
+State 149
+
+   53 expr: expr . PLUS expr
+   54     | expr . MINUS expr
+   55     | expr . ASTA expr
+   56     | expr . SLASH expr
+   57     | expr . MOD expr
+   58     | expr . EQUAL expr
+   59     | expr . EQUAL_EQUAL expr
+   60     | expr . NOT_EQUAL expr
+   61     | expr . LOGICAL_NOT
+   62     | expr . LOGICAL_AND expr
+   63     | expr . LOGICAL_OR expr
+   64     | expr . GRATER_THAN_LEFT expr
+   65     | expr . GRATER_THAN_RIGHT expr
+   66     | expr . EQUAL_GRATER_THAN_LEFT expr
+   67     | expr . EQUAL_GRATER_THAN_RIGHT expr
+   67     | expr EQUAL_GRATER_THAN_RIGHT expr .
+   69     | expr . LEFT_SHIFT expr
+   70     | expr . RIGHT_SHIFT expr
+   71     | expr . LEFT_SHIFT_LOGIC expr
+   72     | expr . RIGHT_SHIFT_LOGIC expr
+   73     | expr . BIT_AND expr
+   74     | expr . BIT_OR expr
+   75     | expr . BIT_XOR expr
+
+    $default  reduce using rule 67 (expr)
+
+
+State 150
+
+   53 expr: expr . PLUS expr
+   54     | expr . MINUS expr
+   55     | expr . ASTA expr
+   56     | expr . SLASH expr
+   57     | expr . MOD expr
+   58     | expr . EQUAL expr
+   59     | expr . EQUAL_EQUAL expr
+   59     | expr EQUAL_EQUAL expr .
+   60     | expr . NOT_EQUAL expr
+   61     | expr . LOGICAL_NOT
+   62     | expr . LOGICAL_AND expr
+   63     | expr . LOGICAL_OR expr
+   64     | expr . GRATER_THAN_LEFT expr
+   65     | expr . GRATER_THAN_RIGHT expr
+   66     | expr . EQUAL_GRATER_THAN_LEFT expr
+   67     | expr . EQUAL_GRATER_THAN_RIGHT expr
+   69     | expr . LEFT_SHIFT expr
+   70     | expr . RIGHT_SHIFT expr
+   71     | expr . LEFT_SHIFT_LOGIC expr
+   72     | expr . RIGHT_SHIFT_LOGIC expr
+   73     | expr . BIT_AND expr
+   74     | expr . BIT_OR expr
+   75     | expr . BIT_XOR expr
+
+    BIT_AND                  shift, and go to state 93
+    BIT_XOR                  shift, and go to state 94
+    BIT_OR                   shift, and go to state 95
+    GRATER_THAN_LEFT         shift, and go to state 96
+    GRATER_THAN_RIGHT        shift, and go to state 97
+    EQUAL_GRATER_THAN_LEFT   shift, and go to state 98
+    EQUAL_GRATER_THAN_RIGHT  shift, and go to state 99
+
+    $default  reduce using rule 59 (expr)
+
+
+State 151
+
+   53 expr: expr . PLUS expr
+   54     | expr . MINUS expr
+   55     | expr . ASTA expr
+   56     | expr . SLASH expr
+   57     | expr . MOD expr
+   58     | expr . EQUAL expr
+   59     | expr . EQUAL_EQUAL expr
+   60     | expr . NOT_EQUAL expr
+   60     | expr NOT_EQUAL expr .
+   61     | expr . LOGICAL_NOT
+   62     | expr . LOGICAL_AND expr
+   63     | expr . LOGICAL_OR expr
+   64     | expr . GRATER_THAN_LEFT expr
+   65     | expr . GRATER_THAN_RIGHT expr
+   66     | expr . EQUAL_GRATER_THAN_LEFT expr
+   67     | expr . EQUAL_GRATER_THAN_RIGHT expr
+   69     | expr . LEFT_SHIFT expr
+   70     | expr . RIGHT_SHIFT expr
+   71     | expr . LEFT_SHIFT_LOGIC expr
+   72     | expr . RIGHT_SHIFT_LOGIC expr
+   73     | expr . BIT_AND expr
+   74     | expr . BIT_OR expr
+   75     | expr . BIT_XOR expr
+
+    BIT_AND                  shift, and go to state 93
+    BIT_XOR                  shift, and go to state 94
+    BIT_OR                   shift, and go to state 95
+    GRATER_THAN_LEFT         shift, and go to state 96
+    GRATER_THAN_RIGHT        shift, and go to state 97
+    EQUAL_GRATER_THAN_LEFT   shift, and go to state 98
+    EQUAL_GRATER_THAN_RIGHT  shift, and go to state 99
+
+    $default  reduce using rule 60 (expr)
+
+
+State 152
+
+   53 expr: expr . PLUS expr
+   54     | expr . MINUS expr
+   55     | expr . ASTA expr
+   56     | expr . SLASH expr
+   57     | expr . MOD expr
+   58     | expr . EQUAL expr
+   59     | expr . EQUAL_EQUAL expr
+   60     | expr . NOT_EQUAL expr
+   61     | expr . LOGICAL_NOT
+   62     | expr . LOGICAL_AND expr
+   62     | expr LOGICAL_AND expr .
+   63     | expr . LOGICAL_OR expr
+   64     | expr . GRATER_THAN_LEFT expr
+   65     | expr . GRATER_THAN_RIGHT expr
+   66     | expr . EQUAL_GRATER_THAN_LEFT expr
+   67     | expr . EQUAL_GRATER_THAN_RIGHT expr
+   69     | expr . LEFT_SHIFT expr
+   70     | expr . RIGHT_SHIFT expr
+   71     | expr . LEFT_SHIFT_LOGIC expr
+   72     | expr . RIGHT_SHIFT_LOGIC expr
+   73     | expr . BIT_AND expr
+   74     | expr . BIT_OR expr
+   75     | expr . BIT_XOR expr
+
+    BIT_AND                  shift, and go to state 93
+    BIT_XOR                  shift, and go to state 94
+    BIT_OR                   shift, and go to state 95
+    GRATER_THAN_LEFT         shift, and go to state 96
+    GRATER_THAN_RIGHT        shift, and go to state 97
+    EQUAL_GRATER_THAN_LEFT   shift, and go to state 98
+    EQUAL_GRATER_THAN_RIGHT  shift, and go to state 99
+
+    $default  reduce using rule 62 (expr)
+
+
+State 153
+
+   53 expr: expr . PLUS expr
+   54     | expr . MINUS expr
+   55     | expr . ASTA expr
+   56     | expr . SLASH expr
+   57     | expr . MOD expr
+   58     | expr . EQUAL expr
+   59     | expr . EQUAL_EQUAL expr
+   60     | expr . NOT_EQUAL expr
+   61     | expr . LOGICAL_NOT
+   62     | expr . LOGICAL_AND expr
+   63     | expr . LOGICAL_OR expr
+   63     | expr LOGICAL_OR expr .
+   64     | expr . GRATER_THAN_LEFT expr
+   65     | expr . GRATER_THAN_RIGHT expr
+   66     | expr . EQUAL_GRATER_THAN_LEFT expr
+   67     | expr . EQUAL_GRATER_THAN_RIGHT expr
+   69     | expr . LEFT_SHIFT expr
+   70     | expr . RIGHT_SHIFT expr
+   71     | expr . LEFT_SHIFT_LOGIC expr
+   72     | expr . RIGHT_SHIFT_LOGIC expr
+   73     | expr . BIT_AND expr
+   74     | expr . BIT_OR expr
+   75     | expr . BIT_XOR expr
+
+    BIT_AND                  shift, and go to state 93
+    BIT_XOR                  shift, and go to state 94
+    BIT_OR                   shift, and go to state 95
+    GRATER_THAN_LEFT         shift, and go to state 96
+    GRATER_THAN_RIGHT        shift, and go to state 97
+    EQUAL_GRATER_THAN_LEFT   shift, and go to state 98
+    EQUAL_GRATER_THAN_RIGHT  shift, and go to state 99
+
+    $default  reduce using rule 63 (expr)
+
+
+State 154
+
+   34 codes: codes . var CR
+   35      | codes . callst CR
+   36      | codes . array_reteral EQUAL callst CR
+   37      | codes . ifst
+   38      | codes . forst
+   39      | codes . dowhilest
+   40      | codes . BREAK CR
+   41      | codes . CONTINUE CR
+   42      | codes . retrnst CR
+   43      | codes . expr CR
+   84 ifst: IF expr THEN codes . ENDIF
+   85     | IF expr THEN codes . ELSE codes ENDIF
+   86     | IF expr THEN codes . else_if_list ENDIF
+   87     | IF expr THEN codes . else_if_list ELSE codes ENDIF
+
+    IF                  shift, and go to state 21
+    ELSE                shift, and go to state 171
+    ENDIF               shift, and go to state 172
+    FOR                 shift, and go to state 22
+    WHILE               shift, and go to state 23
+    DO                  shift, and go to state 24
+    BREAK               shift, and go to state 72
+    CONTINUE            shift, and go to state 73
+    RETRN               shift, and go to state 27
+    INT                 shift, and go to state 28
+    STRING              shift, and go to state 29
+    VOID                shift, and go to state 30
+    STR_RETERAL         shift, and go to state 31
+    INT_RETERAL         shift, and go to state 32
+    MINUS_INT_RETERAL   shift, and go to state 33
+    BIT_NOT             shift, and go to state 34
+    TOKEN               shift, and go to state 35
+    RESERVED_WORD       shift, and go to state 36
+    BRACE               shift, and go to state 37
+    LEFT_INDEX_BRACKET  shift, and go to state 38
+
+    typest         go to state 39
+    var            go to state 74
+    array_reteral  go to state 75
+    expr           go to state 76
+    callst         go to state 77
+    else_if_list   go to state 173
+    ifst           go to state 78
+    forst          go to state 79
+    dowhilest      go to state 80
+    retrnst        go to state 81
+
+
+State 155
+
+   53 expr: expr . PLUS expr
+   54     | expr . MINUS expr
+   55     | expr . ASTA expr
+   56     | expr . SLASH expr
+   57     | expr . MOD expr
+   58     | expr . EQUAL expr
+   59     | expr . EQUAL_EQUAL expr
+   60     | expr . NOT_EQUAL expr
+   61     | expr . LOGICAL_NOT
+   62     | expr . LOGICAL_AND expr
+   63     | expr . LOGICAL_OR expr
+   64     | expr . GRATER_THAN_LEFT expr
+   65     | expr . GRATER_THAN_RIGHT expr
+   66     | expr . EQUAL_GRATER_THAN_LEFT expr
+   67     | expr . EQUAL_GRATER_THAN_RIGHT expr
+   69     | expr . LEFT_SHIFT expr
+   70     | expr . RIGHT_SHIFT expr
+   71     | expr . LEFT_SHIFT_LOGIC expr
+   72     | expr . RIGHT_SHIFT_LOGIC expr
+   73     | expr . BIT_AND expr
+   74     | expr . BIT_OR expr
+   75     | expr . BIT_XOR expr
+   88 forst: FOR TOKEN EQUAL expr . TO expr codes NEXT
+   89      | FOR TOKEN EQUAL expr . TO expr STEP expr codes NEXT
+
+    TO                       shift, and go to state 174
+    EQUAL                    shift, and go to state 83
+    PLUS                     shift, and go to state 84
+    MINUS                    shift, and go to state 85
+    ASTA                     shift, and go to state 86
+    SLASH                    shift, and go to state 87
+    MOD                      shift, and go to state 88
+    LEFT_SHIFT               shift, and go to state 89
+    RIGHT_SHIFT              shift, and go to state 90
+    LEFT_SHIFT_LOGIC         shift, and go to state 91
+    RIGHT_SHIFT_LOGIC        shift, and go to state 92
+    BIT_AND                  shift, and go to state 93
+    BIT_XOR                  shift, and go to state 94
+    BIT_OR                   shift, and go to state 95
+    GRATER_THAN_LEFT         shift, and go to state 96
+    GRATER_THAN_RIGHT        shift, and go to state 97
+    EQUAL_GRATER_THAN_LEFT   shift, and go to state 98
+    EQUAL_GRATER_THAN_RIGHT  shift, and go to state 99
+    EQUAL_EQUAL              shift, and go to state 100
+    LOGICAL_NOT              shift, and go to state 101
+    NOT_EQUAL                shift, and go to state 102
+    LOGICAL_AND              shift, and go to state 103
+    LOGICAL_OR               shift, and go to state 104
+
+
+State 156
+
+   91 dowhilest: WHILE expr codes ENDWHILE .
+
+    $default  reduce using rule 91 (dowhilest)
+
+
+State 157
+
+   34 codes: codes . var CR
+   35      | codes . callst CR
+   36      | codes . array_reteral EQUAL callst CR
+   37      | codes . ifst
+   38      | codes . forst
+   39      | codes . dowhilest
+   40      | codes . BREAK CR
+   41      | codes . CONTINUE CR
+   42      | codes . retrnst CR
+   43      | codes . expr CR
+   90 dowhilest: DO WHILE expr codes . LOOP
+
+    IF                  shift, and go to state 21
+    FOR                 shift, and go to state 22
+    WHILE               shift, and go to state 23
+    DO                  shift, and go to state 24
+    LOOP                shift, and go to state 175
+    BREAK               shift, and go to state 72
+    CONTINUE            shift, and go to state 73
+    RETRN               shift, and go to state 27
+    INT                 shift, and go to state 28
+    STRING              shift, and go to state 29
+    VOID                shift, and go to state 30
+    STR_RETERAL         shift, and go to state 31
+    INT_RETERAL         shift, and go to state 32
+    MINUS_INT_RETERAL   shift, and go to state 33
+    BIT_NOT             shift, and go to state 34
+    TOKEN               shift, and go to state 35
+    RESERVED_WORD       shift, and go to state 36
+    BRACE               shift, and go to state 37
+    LEFT_INDEX_BRACKET  shift, and go to state 38
+
+    typest         go to state 39
+    var            go to state 74
+    array_reteral  go to state 75
+    expr           go to state 76
+    callst         go to state 77
+    ifst           go to state 78
+    forst          go to state 79
+    dowhilest      go to state 80
+    retrnst        go to state 81
+
+
+State 158
+
+   80 manytokenst: manytokenst COMMA . expr
+
+    STR_RETERAL        shift, and go to state 31
+    INT_RETERAL        shift, and go to state 32
+    MINUS_INT_RETERAL  shift, and go to state 33
+    BIT_NOT            shift, and go to state 34
+    TOKEN              shift, and go to state 50
+    BRACE              shift, and go to state 37
+
+    expr  go to state 176
+
+
+State 159
+
+   93 retrnst: RETRN LEFT_INDEX_BRACKET manytokenst RIGHT_INDEX_BRACKET .
+
+    $default  reduce using rule 93 (retrnst)
+
+
+State 160
+
+   16 var: INT TOKEN LEFT_INDEX_BRACKET INT_RETERAL . RIGHT_INDEX_BRACKET
+   18    | INT TOKEN LEFT_INDEX_BRACKET INT_RETERAL . RIGHT_INDEX_BRACKET EQUAL LEFT_INDEX_BRACKET initialize_intval_st RIGHT_INDEX_BRACKET
+
+    RIGHT_INDEX_BRACKET  shift, and go to state 177
+
+
+State 161
+
+   17 var: STRING TOKEN LEFT_INDEX_BRACKET INT_RETERAL . RIGHT_INDEX_BRACKET
+   19    | STRING TOKEN LEFT_INDEX_BRACKET INT_RETERAL . RIGHT_INDEX_BRACKET EQUAL LEFT_INDEX_BRACKET initialize_strval_st RIGHT_INDEX_BRACKET
+
+    RIGHT_INDEX_BRACKET  shift, and go to state 178
+
+
+State 162
+
+   78 callst: TOKEN BRACE manytokenst END_BRACE .
+
+    $default  reduce using rule 78 (callst)
+
+
+State 163
+
+   77 expr: TOKEN LEFT_INDEX_BRACKET expr RIGHT_INDEX_BRACKET .
+
+    $default  reduce using rule 77 (expr)
+
+
+State 164
+
+   79 callst: RESERVED_WORD BRACE manytokenst END_BRACE .
+
+    $default  reduce using rule 79 (callst)
+
+
+State 165
+
+   45 accessable_var: TOKEN LEFT_INDEX_BRACKET expr . RIGHT_INDEX_BRACKET
+   53 expr: expr . PLUS expr
+   54     | expr . MINUS expr
+   55     | expr . ASTA expr
+   56     | expr . SLASH expr
+   57     | expr . MOD expr
+   58     | expr . EQUAL expr
+   59     | expr . EQUAL_EQUAL expr
+   60     | expr . NOT_EQUAL expr
+   61     | expr . LOGICAL_NOT
+   62     | expr . LOGICAL_AND expr
+   63     | expr . LOGICAL_OR expr
+   64     | expr . GRATER_THAN_LEFT expr
+   65     | expr . GRATER_THAN_RIGHT expr
+   66     | expr . EQUAL_GRATER_THAN_LEFT expr
+   67     | expr . EQUAL_GRATER_THAN_RIGHT expr
+   69     | expr . LEFT_SHIFT expr
+   70     | expr . RIGHT_SHIFT expr
+   71     | expr . LEFT_SHIFT_LOGIC expr
+   72     | expr . RIGHT_SHIFT_LOGIC expr
+   73     | expr . BIT_AND expr
+   74     | expr . BIT_OR expr
+   75     | expr . BIT_XOR expr
+
+    EQUAL                    shift, and go to state 83
+    PLUS                     shift, and go to state 84
+    MINUS                    shift, and go to state 85
+    ASTA                     shift, and go to state 86
+    SLASH                    shift, and go to state 87
+    MOD                      shift, and go to state 88
+    LEFT_SHIFT               shift, and go to state 89
+    RIGHT_SHIFT              shift, and go to state 90
+    LEFT_SHIFT_LOGIC         shift, and go to state 91
+    RIGHT_SHIFT_LOGIC        shift, and go to state 92
+    BIT_AND                  shift, and go to state 93
+    BIT_XOR                  shift, and go to state 94
+    BIT_OR                   shift, and go to state 95
+    GRATER_THAN_LEFT         shift, and go to state 96
+    GRATER_THAN_RIGHT        shift, and go to state 97
+    EQUAL_GRATER_THAN_LEFT   shift, and go to state 98
+    EQUAL_GRATER_THAN_RIGHT  shift, and go to state 99
+    EQUAL_EQUAL              shift, and go to state 100
+    LOGICAL_NOT              shift, and go to state 101
+    NOT_EQUAL                shift, and go to state 102
+    LOGICAL_AND              shift, and go to state 103
+    LOGICAL_OR               shift, and go to state 104
+    RIGHT_INDEX_BRACKET      shift, and go to state 179
+
+
+State 166
+
+   46 return_vars: return_vars COMMA accessable_var .
+
+    $default  reduce using rule 46 (return_vars)
+
+
+State 167
+
+   20 var: typest TOKEN EQUAL STR_RETERAL .
+
+    $default  reduce using rule 20 (var)
+
+
+State 168
+
+   15 var: typest TOKEN EQUAL INT_RETERAL .
+
+    $default  reduce using rule 15 (var)
+
+
+State 169
+
+   36 codes: codes array_reteral EQUAL callst . CR
+
+    CR  shift, and go to state 180
+
+
+State 170
+
+   26 codes: array_reteral EQUAL callst CR .
+
+    $default  reduce using rule 26 (codes)
+
+
+State 171
+
+   83 else_if_list: ELSE . IF expr THEN codes
+   85 ifst: IF expr THEN codes ELSE . codes ENDIF
+
+    IF                  shift, and go to state 181
+    FOR                 shift, and go to state 22
+    WHILE               shift, and go to state 23
+    DO                  shift, and go to state 24
+    BREAK               shift, and go to state 25
+    CONTINUE            shift, and go to state 26
+    RETRN               shift, and go to state 27
+    INT                 shift, and go to state 28
+    STRING              shift, and go to state 29
+    VOID                shift, and go to state 30
+    STR_RETERAL         shift, and go to state 31
+    INT_RETERAL         shift, and go to state 32
+    MINUS_INT_RETERAL   shift, and go to state 33
+    BIT_NOT             shift, and go to state 34
+    TOKEN               shift, and go to state 35
+    RESERVED_WORD       shift, and go to state 36
+    BRACE               shift, and go to state 37
+    LEFT_INDEX_BRACKET  shift, and go to state 38
+
+    typest         go to state 39
+    var            go to state 40
+    codes          go to state 182
+    array_reteral  go to state 42
+    expr           go to state 43
+    callst         go to state 44
+    ifst           go to state 45
+    forst          go to state 46
+    dowhilest      go to state 47
+    retrnst        go to state 48
+
+
+State 172
+
+   84 ifst: IF expr THEN codes ENDIF .
+
+    $default  reduce using rule 84 (ifst)
+
+
+State 173
+
+   82 else_if_list: else_if_list . else_if_list
+   86 ifst: IF expr THEN codes else_if_list . ENDIF
+   87     | IF expr THEN codes else_if_list . ELSE codes ENDIF
+
+    ELSE   shift, and go to state 183
+    ENDIF  shift, and go to state 184
+
+    else_if_list  go to state 185
+
+
+State 174
+
+   88 forst: FOR TOKEN EQUAL expr TO . expr codes NEXT
+   89      | FOR TOKEN EQUAL expr TO . expr STEP expr codes NEXT
+
+    STR_RETERAL        shift, and go to state 31
+    INT_RETERAL        shift, and go to state 32
+    MINUS_INT_RETERAL  shift, and go to state 33
+    BIT_NOT            shift, and go to state 34
+    TOKEN              shift, and go to state 50
+    BRACE              shift, and go to state 37
+
+    expr  go to state 186
+
+
+State 175
+
+   90 dowhilest: DO WHILE expr codes LOOP .
+
+    $default  reduce using rule 90 (dowhilest)
+
+
+State 176
+
+   53 expr: expr . PLUS expr
+   54     | expr . MINUS expr
+   55     | expr . ASTA expr
+   56     | expr . SLASH expr
+   57     | expr . MOD expr
+   58     | expr . EQUAL expr
+   59     | expr . EQUAL_EQUAL expr
+   60     | expr . NOT_EQUAL expr
+   61     | expr . LOGICAL_NOT
+   62     | expr . LOGICAL_AND expr
+   63     | expr . LOGICAL_OR expr
+   64     | expr . GRATER_THAN_LEFT expr
+   65     | expr . GRATER_THAN_RIGHT expr
+   66     | expr . EQUAL_GRATER_THAN_LEFT expr
+   67     | expr . EQUAL_GRATER_THAN_RIGHT expr
+   69     | expr . LEFT_SHIFT expr
+   70     | expr . RIGHT_SHIFT expr
+   71     | expr . LEFT_SHIFT_LOGIC expr
+   72     | expr . RIGHT_SHIFT_LOGIC expr
+   73     | expr . BIT_AND expr
+   74     | expr . BIT_OR expr
+   75     | expr . BIT_XOR expr
+   80 manytokenst: manytokenst COMMA expr .
+
+    EQUAL                    shift, and go to state 83
+    PLUS                     shift, and go to state 84
+    MINUS                    shift, and go to state 85
+    ASTA                     shift, and go to state 86
+    SLASH                    shift, and go to state 87
+    MOD                      shift, and go to state 88
+    LEFT_SHIFT               shift, and go to state 89
+    RIGHT_SHIFT              shift, and go to state 90
+    LEFT_SHIFT_LOGIC         shift, and go to state 91
+    RIGHT_SHIFT_LOGIC        shift, and go to state 92
+    BIT_AND                  shift, and go to state 93
+    BIT_XOR                  shift, and go to state 94
+    BIT_OR                   shift, and go to state 95
+    GRATER_THAN_LEFT         shift, and go to state 96
+    GRATER_THAN_RIGHT        shift, and go to state 97
+    EQUAL_GRATER_THAN_LEFT   shift, and go to state 98
+    EQUAL_GRATER_THAN_RIGHT  shift, and go to state 99
+    EQUAL_EQUAL              shift, and go to state 100
+    LOGICAL_NOT              shift, and go to state 101
+    NOT_EQUAL                shift, and go to state 102
+    LOGICAL_AND              shift, and go to state 103
+    LOGICAL_OR               shift, and go to state 104
+
+    $default  reduce using rule 80 (manytokenst)
+
+
+State 177
+
+   16 var: INT TOKEN LEFT_INDEX_BRACKET INT_RETERAL RIGHT_INDEX_BRACKET .
+   18    | INT TOKEN LEFT_INDEX_BRACKET INT_RETERAL RIGHT_INDEX_BRACKET . EQUAL LEFT_INDEX_BRACKET initialize_intval_st RIGHT_INDEX_BRACKET
+
+    EQUAL  shift, and go to state 187
+
+    $default  reduce using rule 16 (var)
+
+
+State 178
+
+   17 var: STRING TOKEN LEFT_INDEX_BRACKET INT_RETERAL RIGHT_INDEX_BRACKET .
+   19    | STRING TOKEN LEFT_INDEX_BRACKET INT_RETERAL RIGHT_INDEX_BRACKET . EQUAL LEFT_INDEX_BRACKET initialize_strval_st RIGHT_INDEX_BRACKET
+
+    EQUAL  shift, and go to state 188
+
+    $default  reduce using rule 17 (var)
+
+
+State 179
+
+   45 accessable_var: TOKEN LEFT_INDEX_BRACKET expr RIGHT_INDEX_BRACKET .
+
+    $default  reduce using rule 45 (accessable_var)
+
+
+State 180
+
+   36 codes: codes array_reteral EQUAL callst CR .
+
+    $default  reduce using rule 36 (codes)
+
+
+State 181
+
+   83 else_if_list: ELSE IF . expr THEN codes
+   84 ifst: IF . expr THEN codes ENDIF
+   85     | IF . expr THEN codes ELSE codes ENDIF
+   86     | IF . expr THEN codes else_if_list ENDIF
+   87     | IF . expr THEN codes else_if_list ELSE codes ENDIF
+
+    STR_RETERAL        shift, and go to state 31
+    INT_RETERAL        shift, and go to state 32
+    MINUS_INT_RETERAL  shift, and go to state 33
+    BIT_NOT            shift, and go to state 34
+    TOKEN              shift, and go to state 50
+    BRACE              shift, and go to state 37
+
+    expr  go to state 189
+
+
+State 182
+
+   34 codes: codes . var CR
+   35      | codes . callst CR
+   36      | codes . array_reteral EQUAL callst CR
+   37      | codes . ifst
+   38      | codes . forst
+   39      | codes . dowhilest
+   40      | codes . BREAK CR
+   41      | codes . CONTINUE CR
+   42      | codes . retrnst CR
+   43      | codes . expr CR
+   85 ifst: IF expr THEN codes ELSE codes . ENDIF
+
+    IF                  shift, and go to state 21
+    ENDIF               shift, and go to state 190
+    FOR                 shift, and go to state 22
+    WHILE               shift, and go to state 23
+    DO                  shift, and go to state 24
+    BREAK               shift, and go to state 72
+    CONTINUE            shift, and go to state 73
+    RETRN               shift, and go to state 27
+    INT                 shift, and go to state 28
+    STRING              shift, and go to state 29
+    VOID                shift, and go to state 30
+    STR_RETERAL         shift, and go to state 31
+    INT_RETERAL         shift, and go to state 32
+    MINUS_INT_RETERAL   shift, and go to state 33
+    BIT_NOT             shift, and go to state 34
+    TOKEN               shift, and go to state 35
+    RESERVED_WORD       shift, and go to state 36
+    BRACE               shift, and go to state 37
+    LEFT_INDEX_BRACKET  shift, and go to state 38
+
+    typest         go to state 39
+    var            go to state 74
+    array_reteral  go to state 75
+    expr           go to state 76
+    callst         go to state 77
+    ifst           go to state 78
+    forst          go to state 79
+    dowhilest      go to state 80
+    retrnst        go to state 81
+
+
+State 183
+
+   83 else_if_list: ELSE . IF expr THEN codes
+   87 ifst: IF expr THEN codes else_if_list ELSE . codes ENDIF
+
+    IF                  shift, and go to state 181
+    FOR                 shift, and go to state 22
+    WHILE               shift, and go to state 23
+    DO                  shift, and go to state 24
+    BREAK               shift, and go to state 25
+    CONTINUE            shift, and go to state 26
+    RETRN               shift, and go to state 27
+    INT                 shift, and go to state 28
+    STRING              shift, and go to state 29
+    VOID                shift, and go to state 30
+    STR_RETERAL         shift, and go to state 31
+    INT_RETERAL         shift, and go to state 32
+    MINUS_INT_RETERAL   shift, and go to state 33
+    BIT_NOT             shift, and go to state 34
+    TOKEN               shift, and go to state 35
+    RESERVED_WORD       shift, and go to state 36
+    BRACE               shift, and go to state 37
+    LEFT_INDEX_BRACKET  shift, and go to state 38
+
+    typest         go to state 39
+    var            go to state 40
+    codes          go to state 191
+    array_reteral  go to state 42
+    expr           go to state 43
+    callst         go to state 44
+    ifst           go to state 45
+    forst          go to state 46
+    dowhilest      go to state 47
+    retrnst        go to state 48
+
+
+State 184
+
+   86 ifst: IF expr THEN codes else_if_list ENDIF .
+
+    $default  reduce using rule 86 (ifst)
+
+
+State 185
+
+   82 else_if_list: else_if_list . else_if_list
+   82             | else_if_list else_if_list .
+
+    ELSE  shift, and go to state 192
+
+    ELSE      [reduce using rule 82 (else_if_list)]
+    $default  reduce using rule 82 (else_if_list)
+
+    else_if_list  go to state 185
+
+
+State 186
+
+   53 expr: expr . PLUS expr
+   54     | expr . MINUS expr
+   55     | expr . ASTA expr
+   56     | expr . SLASH expr
+   57     | expr . MOD expr
+   58     | expr . EQUAL expr
+   59     | expr . EQUAL_EQUAL expr
+   60     | expr . NOT_EQUAL expr
+   61     | expr . LOGICAL_NOT
+   62     | expr . LOGICAL_AND expr
+   63     | expr . LOGICAL_OR expr
+   64     | expr . GRATER_THAN_LEFT expr
+   65     | expr . GRATER_THAN_RIGHT expr
+   66     | expr . EQUAL_GRATER_THAN_LEFT expr
+   67     | expr . EQUAL_GRATER_THAN_RIGHT expr
+   69     | expr . LEFT_SHIFT expr
+   70     | expr . RIGHT_SHIFT expr
+   71     | expr . LEFT_SHIFT_LOGIC expr
+   72     | expr . RIGHT_SHIFT_LOGIC expr
+   73     | expr . BIT_AND expr
+   74     | expr . BIT_OR expr
+   75     | expr . BIT_XOR expr
+   88 forst: FOR TOKEN EQUAL expr TO expr . codes NEXT
+   89      | FOR TOKEN EQUAL expr TO expr . STEP expr codes NEXT
+
+    IF                       shift, and go to state 21
+    FOR                      shift, and go to state 22
+    STEP                     shift, and go to state 193
+    WHILE                    shift, and go to state 23
+    DO                       shift, and go to state 24
+    BREAK                    shift, and go to state 25
+    CONTINUE                 shift, and go to state 26
+    RETRN                    shift, and go to state 27
+    INT                      shift, and go to state 28
+    STRING                   shift, and go to state 29
+    VOID                     shift, and go to state 30
+    STR_RETERAL              shift, and go to state 31
+    INT_RETERAL              shift, and go to state 32
+    MINUS_INT_RETERAL        shift, and go to state 33
+    EQUAL                    shift, and go to state 83
+    BIT_NOT                  shift, and go to state 34
+    PLUS                     shift, and go to state 84
+    MINUS                    shift, and go to state 85
+    ASTA                     shift, and go to state 86
+    SLASH                    shift, and go to state 87
+    MOD                      shift, and go to state 88
+    LEFT_SHIFT               shift, and go to state 89
+    RIGHT_SHIFT              shift, and go to state 90
+    LEFT_SHIFT_LOGIC         shift, and go to state 91
+    RIGHT_SHIFT_LOGIC        shift, and go to state 92
+    BIT_AND                  shift, and go to state 93
+    BIT_XOR                  shift, and go to state 94
+    BIT_OR                   shift, and go to state 95
+    GRATER_THAN_LEFT         shift, and go to state 96
+    GRATER_THAN_RIGHT        shift, and go to state 97
+    EQUAL_GRATER_THAN_LEFT   shift, and go to state 98
+    EQUAL_GRATER_THAN_RIGHT  shift, and go to state 99
+    EQUAL_EQUAL              shift, and go to state 100
+    LOGICAL_NOT              shift, and go to state 101
+    NOT_EQUAL                shift, and go to state 102
+    LOGICAL_AND              shift, and go to state 103
+    LOGICAL_OR               shift, and go to state 104
+    TOKEN                    shift, and go to state 35
+    RESERVED_WORD            shift, and go to state 36
+    BRACE                    shift, and go to state 37
+    LEFT_INDEX_BRACKET       shift, and go to state 38
+
+    typest         go to state 39
+    var            go to state 40
+    codes          go to state 194
+    array_reteral  go to state 42
+    expr           go to state 43
+    callst         go to state 44
+    ifst           go to state 45
+    forst          go to state 46
+    dowhilest      go to state 47
+    retrnst        go to state 48
+
+
+State 187
+
+   18 var: INT TOKEN LEFT_INDEX_BRACKET INT_RETERAL RIGHT_INDEX_BRACKET EQUAL . LEFT_INDEX_BRACKET initialize_intval_st RIGHT_INDEX_BRACKET
+
+    LEFT_INDEX_BRACKET  shift, and go to state 195
+
+
+State 188
+
+   19 var: STRING TOKEN LEFT_INDEX_BRACKET INT_RETERAL RIGHT_INDEX_BRACKET EQUAL . LEFT_INDEX_BRACKET initialize_strval_st RIGHT_INDEX_BRACKET
+
+    LEFT_INDEX_BRACKET  shift, and go to state 196
+
+
+State 189
+
+   53 expr: expr . PLUS expr
+   54     | expr . MINUS expr
+   55     | expr . ASTA expr
+   56     | expr . SLASH expr
+   57     | expr . MOD expr
+   58     | expr . EQUAL expr
+   59     | expr . EQUAL_EQUAL expr
+   60     | expr . NOT_EQUAL expr
+   61     | expr . LOGICAL_NOT
+   62     | expr . LOGICAL_AND expr
+   63     | expr . LOGICAL_OR expr
+   64     | expr . GRATER_THAN_LEFT expr
+   65     | expr . GRATER_THAN_RIGHT expr
+   66     | expr . EQUAL_GRATER_THAN_LEFT expr
+   67     | expr . EQUAL_GRATER_THAN_RIGHT expr
+   69     | expr . LEFT_SHIFT expr
+   70     | expr . RIGHT_SHIFT expr
+   71     | expr . LEFT_SHIFT_LOGIC expr
+   72     | expr . RIGHT_SHIFT_LOGIC expr
+   73     | expr . BIT_AND expr
+   74     | expr . BIT_OR expr
+   75     | expr . BIT_XOR expr
+   83 else_if_list: ELSE IF expr . THEN codes
+   84 ifst: IF expr . THEN codes ENDIF
+   85     | IF expr . THEN codes ELSE codes ENDIF
+   86     | IF expr . THEN codes else_if_list ENDIF
+   87     | IF expr . THEN codes else_if_list ELSE codes ENDIF
+
+    THEN                     shift, and go to state 197
+    EQUAL                    shift, and go to state 83
+    PLUS                     shift, and go to state 84
+    MINUS                    shift, and go to state 85
+    ASTA                     shift, and go to state 86
+    SLASH                    shift, and go to state 87
+    MOD                      shift, and go to state 88
+    LEFT_SHIFT               shift, and go to state 89
+    RIGHT_SHIFT              shift, and go to state 90
+    LEFT_SHIFT_LOGIC         shift, and go to state 91
+    RIGHT_SHIFT_LOGIC        shift, and go to state 92
+    BIT_AND                  shift, and go to state 93
+    BIT_XOR                  shift, and go to state 94
+    BIT_OR                   shift, and go to state 95
+    GRATER_THAN_LEFT         shift, and go to state 96
+    GRATER_THAN_RIGHT        shift, and go to state 97
+    EQUAL_GRATER_THAN_LEFT   shift, and go to state 98
+    EQUAL_GRATER_THAN_RIGHT  shift, and go to state 99
+    EQUAL_EQUAL              shift, and go to state 100
+    LOGICAL_NOT              shift, and go to state 101
+    NOT_EQUAL                shift, and go to state 102
+    LOGICAL_AND              shift, and go to state 103
+    LOGICAL_OR               shift, and go to state 104
+
+
+State 190
+
+   85 ifst: IF expr THEN codes ELSE codes ENDIF .
+
+    $default  reduce using rule 85 (ifst)
+
+
+State 191
+
+   34 codes: codes . var CR
+   35      | codes . callst CR
+   36      | codes . array_reteral EQUAL callst CR
+   37      | codes . ifst
+   38      | codes . forst
+   39      | codes . dowhilest
+   40      | codes . BREAK CR
+   41      | codes . CONTINUE CR
+   42      | codes . retrnst CR
+   43      | codes . expr CR
+   87 ifst: IF expr THEN codes else_if_list ELSE codes . ENDIF
+
+    IF                  shift, and go to state 21
+    ENDIF               shift, and go to state 198
+    FOR                 shift, and go to state 22
+    WHILE               shift, and go to state 23
+    DO                  shift, and go to state 24
+    BREAK               shift, and go to state 72
+    CONTINUE            shift, and go to state 73
+    RETRN               shift, and go to state 27
+    INT                 shift, and go to state 28
+    STRING              shift, and go to state 29
+    VOID                shift, and go to state 30
+    STR_RETERAL         shift, and go to state 31
+    INT_RETERAL         shift, and go to state 32
+    MINUS_INT_RETERAL   shift, and go to state 33
+    BIT_NOT             shift, and go to state 34
+    TOKEN               shift, and go to state 35
+    RESERVED_WORD       shift, and go to state 36
+    BRACE               shift, and go to state 37
+    LEFT_INDEX_BRACKET  shift, and go to state 38
+
+    typest         go to state 39
+    var            go to state 74
+    array_reteral  go to state 75
+    expr           go to state 76
+    callst         go to state 77
+    ifst           go to state 78
+    forst          go to state 79
+    dowhilest      go to state 80
+    retrnst        go to state 81
+
+
+State 192
+
+   83 else_if_list: ELSE . IF expr THEN codes
+
+    IF  shift, and go to state 199
+
+
+State 193
+
+   89 forst: FOR TOKEN EQUAL expr TO expr STEP . expr codes NEXT
+
+    STR_RETERAL        shift, and go to state 31
+    INT_RETERAL        shift, and go to state 32
+    MINUS_INT_RETERAL  shift, and go to state 33
+    BIT_NOT            shift, and go to state 34
+    TOKEN              shift, and go to state 50
+    BRACE              shift, and go to state 37
+
+    expr  go to state 200
+
+
+State 194
+
+   34 codes: codes . var CR
+   35      | codes . callst CR
+   36      | codes . array_reteral EQUAL callst CR
+   37      | codes . ifst
+   38      | codes . forst
+   39      | codes . dowhilest
+   40      | codes . BREAK CR
+   41      | codes . CONTINUE CR
+   42      | codes . retrnst CR
+   43      | codes . expr CR
+   88 forst: FOR TOKEN EQUAL expr TO expr codes . NEXT
+
+    IF                  shift, and go to state 21
+    FOR                 shift, and go to state 22
+    NEXT                shift, and go to state 201
+    WHILE               shift, and go to state 23
+    DO                  shift, and go to state 24
+    BREAK               shift, and go to state 72
+    CONTINUE            shift, and go to state 73
+    RETRN               shift, and go to state 27
+    INT                 shift, and go to state 28
+    STRING              shift, and go to state 29
+    VOID                shift, and go to state 30
+    STR_RETERAL         shift, and go to state 31
+    INT_RETERAL         shift, and go to state 32
+    MINUS_INT_RETERAL   shift, and go to state 33
+    BIT_NOT             shift, and go to state 34
+    TOKEN               shift, and go to state 35
+    RESERVED_WORD       shift, and go to state 36
+    BRACE               shift, and go to state 37
+    LEFT_INDEX_BRACKET  shift, and go to state 38
+
+    typest         go to state 39
+    var            go to state 74
+    array_reteral  go to state 75
+    expr           go to state 76
+    callst         go to state 77
+    ifst           go to state 78
+    forst          go to state 79
+    dowhilest      go to state 80
+    retrnst        go to state 81
+
+
+State 195
+
+   18 var: INT TOKEN LEFT_INDEX_BRACKET INT_RETERAL RIGHT_INDEX_BRACKET EQUAL LEFT_INDEX_BRACKET . initialize_intval_st RIGHT_INDEX_BRACKET
+
+    INT_RETERAL  shift, and go to state 202
+
+    initialize_intval_st  go to state 203
+
+
+State 196
+
+   19 var: STRING TOKEN LEFT_INDEX_BRACKET INT_RETERAL RIGHT_INDEX_BRACKET EQUAL LEFT_INDEX_BRACKET . initialize_strval_st RIGHT_INDEX_BRACKET
+
+    STR_RETERAL  shift, and go to state 204
+
+    initialize_strval_st  go to state 205
+
+
+State 197
+
+   83 else_if_list: ELSE IF expr THEN . codes
+   84 ifst: IF expr THEN . codes ENDIF
+   85     | IF expr THEN . codes ELSE codes ENDIF
+   86     | IF expr THEN . codes else_if_list ENDIF
+   87     | IF expr THEN . codes else_if_list ELSE codes ENDIF
+
+    IF                  shift, and go to state 21
+    FOR                 shift, and go to state 22
+    WHILE               shift, and go to state 23
+    DO                  shift, and go to state 24
+    BREAK               shift, and go to state 25
+    CONTINUE            shift, and go to state 26
+    RETRN               shift, and go to state 27
+    INT                 shift, and go to state 28
+    STRING              shift, and go to state 29
+    VOID                shift, and go to state 30
+    STR_RETERAL         shift, and go to state 31
+    INT_RETERAL         shift, and go to state 32
+    MINUS_INT_RETERAL   shift, and go to state 33
+    BIT_NOT             shift, and go to state 34
+    TOKEN               shift, and go to state 35
+    RESERVED_WORD       shift, and go to state 36
+    BRACE               shift, and go to state 37
+    LEFT_INDEX_BRACKET  shift, and go to state 38
+
+    typest         go to state 39
+    var            go to state 40
+    codes          go to state 206
+    array_reteral  go to state 42
+    expr           go to state 43
+    callst         go to state 44
+    ifst           go to state 45
+    forst          go to state 46
+    dowhilest      go to state 47
+    retrnst        go to state 48
+
+
+State 198
+
+   87 ifst: IF expr THEN codes else_if_list ELSE codes ENDIF .
+
+    $default  reduce using rule 87 (ifst)
+
+
+State 199
+
+   83 else_if_list: ELSE IF . expr THEN codes
+
+    STR_RETERAL        shift, and go to state 31
+    INT_RETERAL        shift, and go to state 32
+    MINUS_INT_RETERAL  shift, and go to state 33
+    BIT_NOT            shift, and go to state 34
+    TOKEN              shift, and go to state 50
+    BRACE              shift, and go to state 37
+
+    expr  go to state 207
+
+
+State 200
+
+   53 expr: expr . PLUS expr
+   54     | expr . MINUS expr
+   55     | expr . ASTA expr
+   56     | expr . SLASH expr
+   57     | expr . MOD expr
+   58     | expr . EQUAL expr
+   59     | expr . EQUAL_EQUAL expr
+   60     | expr . NOT_EQUAL expr
+   61     | expr . LOGICAL_NOT
+   62     | expr . LOGICAL_AND expr
+   63     | expr . LOGICAL_OR expr
+   64     | expr . GRATER_THAN_LEFT expr
+   65     | expr . GRATER_THAN_RIGHT expr
+   66     | expr . EQUAL_GRATER_THAN_LEFT expr
+   67     | expr . EQUAL_GRATER_THAN_RIGHT expr
+   69     | expr . LEFT_SHIFT expr
+   70     | expr . RIGHT_SHIFT expr
+   71     | expr . LEFT_SHIFT_LOGIC expr
+   72     | expr . RIGHT_SHIFT_LOGIC expr
+   73     | expr . BIT_AND expr
+   74     | expr . BIT_OR expr
+   75     | expr . BIT_XOR expr
+   89 forst: FOR TOKEN EQUAL expr TO expr STEP expr . codes NEXT
+
+    IF                       shift, and go to state 21
+    FOR                      shift, and go to state 22
+    WHILE                    shift, and go to state 23
+    DO                       shift, and go to state 24
+    BREAK                    shift, and go to state 25
+    CONTINUE                 shift, and go to state 26
+    RETRN                    shift, and go to state 27
+    INT                      shift, and go to state 28
+    STRING                   shift, and go to state 29
+    VOID                     shift, and go to state 30
+    STR_RETERAL              shift, and go to state 31
+    INT_RETERAL              shift, and go to state 32
+    MINUS_INT_RETERAL        shift, and go to state 33
+    EQUAL                    shift, and go to state 83
+    BIT_NOT                  shift, and go to state 34
+    PLUS                     shift, and go to state 84
+    MINUS                    shift, and go to state 85
+    ASTA                     shift, and go to state 86
+    SLASH                    shift, and go to state 87
+    MOD                      shift, and go to state 88
+    LEFT_SHIFT               shift, and go to state 89
+    RIGHT_SHIFT              shift, and go to state 90
+    LEFT_SHIFT_LOGIC         shift, and go to state 91
+    RIGHT_SHIFT_LOGIC        shift, and go to state 92
+    BIT_AND                  shift, and go to state 93
+    BIT_XOR                  shift, and go to state 94
+    BIT_OR                   shift, and go to state 95
+    GRATER_THAN_LEFT         shift, and go to state 96
+    GRATER_THAN_RIGHT        shift, and go to state 97
+    EQUAL_GRATER_THAN_LEFT   shift, and go to state 98
+    EQUAL_GRATER_THAN_RIGHT  shift, and go to state 99
+    EQUAL_EQUAL              shift, and go to state 100
+    LOGICAL_NOT              shift, and go to state 101
+    NOT_EQUAL                shift, and go to state 102
+    LOGICAL_AND              shift, and go to state 103
+    LOGICAL_OR               shift, and go to state 104
+    TOKEN                    shift, and go to state 35
+    RESERVED_WORD            shift, and go to state 36
+    BRACE                    shift, and go to state 37
+    LEFT_INDEX_BRACKET       shift, and go to state 38
+
+    typest         go to state 39
+    var            go to state 40
+    codes          go to state 208
+    array_reteral  go to state 42
+    expr           go to state 43
+    callst         go to state 44
+    ifst           go to state 45
+    forst          go to state 46
+    dowhilest      go to state 47
+    retrnst        go to state 48
+
+
+State 201
+
+   88 forst: FOR TOKEN EQUAL expr TO expr codes NEXT .
+
+    $default  reduce using rule 88 (forst)
+
+
+State 202
+
+   11 initialize_intval_st: INT_RETERAL .
+
+    $default  reduce using rule 11 (initialize_intval_st)
+
+
+State 203
+
+   10 initialize_intval_st: initialize_intval_st . COMMA INT_RETERAL
+   18 var: INT TOKEN LEFT_INDEX_BRACKET INT_RETERAL RIGHT_INDEX_BRACKET EQUAL LEFT_INDEX_BRACKET initialize_intval_st . RIGHT_INDEX_BRACKET
+
+    COMMA                shift, and go to state 209
+    RIGHT_INDEX_BRACKET  shift, and go to state 210
+
+
+State 204
+
+   13 initialize_strval_st: STR_RETERAL .
+
+    $default  reduce using rule 13 (initialize_strval_st)
+
+
+State 205
+
+   12 initialize_strval_st: initialize_strval_st . COMMA STR_RETERAL
+   19 var: STRING TOKEN LEFT_INDEX_BRACKET INT_RETERAL RIGHT_INDEX_BRACKET EQUAL LEFT_INDEX_BRACKET initialize_strval_st . RIGHT_INDEX_BRACKET
+
+    COMMA                shift, and go to state 211
+    RIGHT_INDEX_BRACKET  shift, and go to state 212
+
+
+State 206
+
+   34 codes: codes . var CR
+   35      | codes . callst CR
+   36      | codes . array_reteral EQUAL callst CR
+   37      | codes . ifst
+   38      | codes . forst
+   39      | codes . dowhilest
+   40      | codes . BREAK CR
+   41      | codes . CONTINUE CR
+   42      | codes . retrnst CR
+   43      | codes . expr CR
+   83 else_if_list: ELSE IF expr THEN codes .
+   84 ifst: IF expr THEN codes . ENDIF
+   85     | IF expr THEN codes . ELSE codes ENDIF
+   86     | IF expr THEN codes . else_if_list ENDIF
+   87     | IF expr THEN codes . else_if_list ELSE codes ENDIF
+
+    IF                  shift, and go to state 21
+    ELSE                shift, and go to state 171
+    ENDIF               shift, and go to state 172
+    FOR                 shift, and go to state 22
+    WHILE               shift, and go to state 23
+    DO                  shift, and go to state 24
+    BREAK               shift, and go to state 72
+    CONTINUE            shift, and go to state 73
+    RETRN               shift, and go to state 27
+    INT                 shift, and go to state 28
+    STRING              shift, and go to state 29
+    VOID                shift, and go to state 30
+    STR_RETERAL         shift, and go to state 31
+    INT_RETERAL         shift, and go to state 32
+    MINUS_INT_RETERAL   shift, and go to state 33
+    BIT_NOT             shift, and go to state 34
+    TOKEN               shift, and go to state 35
+    RESERVED_WORD       shift, and go to state 36
+    BRACE               shift, and go to state 37
+    LEFT_INDEX_BRACKET  shift, and go to state 38
+
+    ELSE   [reduce using rule 83 (else_if_list)]
+    ENDIF  [reduce using rule 83 (else_if_list)]
+
+    typest         go to state 39
+    var            go to state 74
+    array_reteral  go to state 75
+    expr           go to state 76
+    callst         go to state 77
+    else_if_list   go to state 173
+    ifst           go to state 78
+    forst          go to state 79
+    dowhilest      go to state 80
+    retrnst        go to state 81
+
+
+State 207
+
+   53 expr: expr . PLUS expr
+   54     | expr . MINUS expr
+   55     | expr . ASTA expr
+   56     | expr . SLASH expr
+   57     | expr . MOD expr
+   58     | expr . EQUAL expr
+   59     | expr . EQUAL_EQUAL expr
+   60     | expr . NOT_EQUAL expr
+   61     | expr . LOGICAL_NOT
+   62     | expr . LOGICAL_AND expr
+   63     | expr . LOGICAL_OR expr
+   64     | expr . GRATER_THAN_LEFT expr
+   65     | expr . GRATER_THAN_RIGHT expr
+   66     | expr . EQUAL_GRATER_THAN_LEFT expr
+   67     | expr . EQUAL_GRATER_THAN_RIGHT expr
+   69     | expr . LEFT_SHIFT expr
+   70     | expr . RIGHT_SHIFT expr
+   71     | expr . LEFT_SHIFT_LOGIC expr
+   72     | expr . RIGHT_SHIFT_LOGIC expr
+   73     | expr . BIT_AND expr
+   74     | expr . BIT_OR expr
+   75     | expr . BIT_XOR expr
+   83 else_if_list: ELSE IF expr . THEN codes
+
+    THEN                     shift, and go to state 213
+    EQUAL                    shift, and go to state 83
+    PLUS                     shift, and go to state 84
+    MINUS                    shift, and go to state 85
+    ASTA                     shift, and go to state 86
+    SLASH                    shift, and go to state 87
+    MOD                      shift, and go to state 88
+    LEFT_SHIFT               shift, and go to state 89
+    RIGHT_SHIFT              shift, and go to state 90
+    LEFT_SHIFT_LOGIC         shift, and go to state 91
+    RIGHT_SHIFT_LOGIC        shift, and go to state 92
+    BIT_AND                  shift, and go to state 93
+    BIT_XOR                  shift, and go to state 94
+    BIT_OR                   shift, and go to state 95
+    GRATER_THAN_LEFT         shift, and go to state 96
+    GRATER_THAN_RIGHT        shift, and go to state 97
+    EQUAL_GRATER_THAN_LEFT   shift, and go to state 98
+    EQUAL_GRATER_THAN_RIGHT  shift, and go to state 99
+    EQUAL_EQUAL              shift, and go to state 100
+    LOGICAL_NOT              shift, and go to state 101
+    NOT_EQUAL                shift, and go to state 102
+    LOGICAL_AND              shift, and go to state 103
+    LOGICAL_OR               shift, and go to state 104
+
+
+State 208
+
+   34 codes: codes . var CR
+   35      | codes . callst CR
+   36      | codes . array_reteral EQUAL callst CR
+   37      | codes . ifst
+   38      | codes . forst
+   39      | codes . dowhilest
+   40      | codes . BREAK CR
+   41      | codes . CONTINUE CR
+   42      | codes . retrnst CR
+   43      | codes . expr CR
+   89 forst: FOR TOKEN EQUAL expr TO expr STEP expr codes . NEXT
+
+    IF                  shift, and go to state 21
+    FOR                 shift, and go to state 22
+    NEXT                shift, and go to state 214
+    WHILE               shift, and go to state 23
+    DO                  shift, and go to state 24
+    BREAK               shift, and go to state 72
+    CONTINUE            shift, and go to state 73
+    RETRN               shift, and go to state 27
+    INT                 shift, and go to state 28
+    STRING              shift, and go to state 29
+    VOID                shift, and go to state 30
+    STR_RETERAL         shift, and go to state 31
+    INT_RETERAL         shift, and go to state 32
+    MINUS_INT_RETERAL   shift, and go to state 33
+    BIT_NOT             shift, and go to state 34
+    TOKEN               shift, and go to state 35
+    RESERVED_WORD       shift, and go to state 36
+    BRACE               shift, and go to state 37
+    LEFT_INDEX_BRACKET  shift, and go to state 38
+
+    typest         go to state 39
+    var            go to state 74
+    array_reteral  go to state 75
+    expr           go to state 76
+    callst         go to state 77
+    ifst           go to state 78
+    forst          go to state 79
+    dowhilest      go to state 80
+    retrnst        go to state 81
+
+
+State 209
+
+   10 initialize_intval_st: initialize_intval_st COMMA . INT_RETERAL
+
+    INT_RETERAL  shift, and go to state 215
+
+
+State 210
+
+   18 var: INT TOKEN LEFT_INDEX_BRACKET INT_RETERAL RIGHT_INDEX_BRACKET EQUAL LEFT_INDEX_BRACKET initialize_intval_st RIGHT_INDEX_BRACKET .
+
+    $default  reduce using rule 18 (var)
+
+
+State 211
+
+   12 initialize_strval_st: initialize_strval_st COMMA . STR_RETERAL
+
+    STR_RETERAL  shift, and go to state 216
+
+
+State 212
+
+   19 var: STRING TOKEN LEFT_INDEX_BRACKET INT_RETERAL RIGHT_INDEX_BRACKET EQUAL LEFT_INDEX_BRACKET initialize_strval_st RIGHT_INDEX_BRACKET .
+
+    $default  reduce using rule 19 (var)
+
+
+State 213
+
+   83 else_if_list: ELSE IF expr THEN . codes
+
+    IF                  shift, and go to state 21
+    FOR                 shift, and go to state 22
+    WHILE               shift, and go to state 23
+    DO                  shift, and go to state 24
+    BREAK               shift, and go to state 25
+    CONTINUE            shift, and go to state 26
+    RETRN               shift, and go to state 27
+    INT                 shift, and go to state 28
+    STRING              shift, and go to state 29
+    VOID                shift, and go to state 30
+    STR_RETERAL         shift, and go to state 31
+    INT_RETERAL         shift, and go to state 32
+    MINUS_INT_RETERAL   shift, and go to state 33
+    BIT_NOT             shift, and go to state 34
+    TOKEN               shift, and go to state 35
+    RESERVED_WORD       shift, and go to state 36
+    BRACE               shift, and go to state 37
+    LEFT_INDEX_BRACKET  shift, and go to state 38
+
+    typest         go to state 39
+    var            go to state 40
+    codes          go to state 217
+    array_reteral  go to state 42
+    expr           go to state 43
+    callst         go to state 44
+    ifst           go to state 45
+    forst          go to state 46
+    dowhilest      go to state 47
+    retrnst        go to state 48
+
+
+State 214
+
+   89 forst: FOR TOKEN EQUAL expr TO expr STEP expr codes NEXT .
+
+    $default  reduce using rule 89 (forst)
+
+
+State 215
+
+   10 initialize_intval_st: initialize_intval_st COMMA INT_RETERAL .
+
+    $default  reduce using rule 10 (initialize_intval_st)
+
+
+State 216
+
+   12 initialize_strval_st: initialize_strval_st COMMA STR_RETERAL .
+
+    $default  reduce using rule 12 (initialize_strval_st)
+
+
+State 217
+
+   34 codes: codes . var CR
+   35      | codes . callst CR
+   36      | codes . array_reteral EQUAL callst CR
+   37      | codes . ifst
+   38      | codes . forst
+   39      | codes . dowhilest
+   40      | codes . BREAK CR
+   41      | codes . CONTINUE CR
+   42      | codes . retrnst CR
+   43      | codes . expr CR
+   83 else_if_list: ELSE IF expr THEN codes .
+
+    IF                  shift, and go to state 21
+    FOR                 shift, and go to state 22
+    WHILE               shift, and go to state 23
+    DO                  shift, and go to state 24
+    BREAK               shift, and go to state 72
+    CONTINUE            shift, and go to state 73
+    RETRN               shift, and go to state 27
+    INT                 shift, and go to state 28
+    STRING              shift, and go to state 29
+    VOID                shift, and go to state 30
+    STR_RETERAL         shift, and go to state 31
+    INT_RETERAL         shift, and go to state 32
+    MINUS_INT_RETERAL   shift, and go to state 33
+    BIT_NOT             shift, and go to state 34
+    TOKEN               shift, and go to state 35
+    RESERVED_WORD       shift, and go to state 36
+    BRACE               shift, and go to state 37
+    LEFT_INDEX_BRACKET  shift, and go to state 38
+
+    $default  reduce using rule 83 (else_if_list)
+
+    typest         go to state 39
+    var            go to state 74
+    array_reteral  go to state 75
+    expr           go to state 76
+    callst         go to state 77
+    ifst           go to state 78
+    forst          go to state 79
+    dowhilest      go to state 80
+    retrnst        go to state 81

@@ -13,6 +13,7 @@ typedef enum {
 
 class t_token {
 public:
+	t_token * next_token;
 	t_token();
 	t_token(const t_token &t);
 	std::string token_str;
@@ -22,12 +23,11 @@ public:
 	t_token operator+(const t_token& t2);
 	// ローカル変数であるかどうか
 	bool is_local;
+	// コード中どんな名前で呼ばれているか
 	std::string real_name;
-	void set_local_name(t_token& token);
+	// callst(関数呼び出し) の引数など
 	static t_token get_local_name(std::string name);
 	static t_token* string_concatenation(const t_token& t1, const t_token& t2);
-	static std::string str_to_hash(std::string name);
-	static std::string convert_name_to_local(std::string function_name, std::string realname);
 };
 
 #endif // __T_TOKEN_HPP_

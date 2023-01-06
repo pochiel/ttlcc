@@ -6,6 +6,7 @@ target_srcs=./sub_module/libmpegts/crc/crc.c
 target_srcs+=./t_token.cpp 
 target_srcs+=./function.cpp 
 target_srcs+=./common.cpp 
+target_srcs+=./variable_manager.cpp 
 
 all:
 ifeq ($(debugout), 1)
