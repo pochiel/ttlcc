@@ -1,0 +1,10 @@
+# 
+*.tab.c
+*.tab.h
+parser.cpp
+parser.hpp
+tokens.cpp
+ttlc_conflict.log
+ttlcc
+parser.output
+out.ttl

@@ -682,3 +682,7 @@ std::string get_connector(std::string orig_label) {
 	}
 	return ret;
 }
+
+ void yyerror (char const *s) {
+   fprintf (stderr, "%s\n", s);
+ }
