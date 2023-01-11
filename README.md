@@ -1,3 +1,6 @@
+# 注意
+2023/01/12 現在、mainブランチはビルド不可能です。　悲しいなあ。  
+
 # ttlcc
 A wrapper language transpiler that outputs Tera Term macros.  
 Tera Term マクロを出力するラッパー言語のトランスパイラ。  
