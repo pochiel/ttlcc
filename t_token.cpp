@@ -14,19 +14,20 @@
 		real_name="";
 		preamble_str="";
 		next_token = NULL;
+		localname = "";
+		parent_function = "";
+		physicalname = "";
+		synbol_info = NULL;
 	}
 	t_token::t_token(const t_token &t){
-		token_str = t.token_str;
-		type = t.type;
-		is_local = false;
-		real_name="";
-		preamble_str=t.preamble_str;
-		next_token = NULL;
+		*this = t;
 	}
 
 	// 登録済みの変数を取得する
 	t_token t_token::get_local_name(std::string name) {
-		t_token ret = variable_manager::get_instance()->get_symbol_table(variable_manager::convert_name_to_local(function_manager::get_instance()->get_function_name(), function_manager::get_instance()->get_argument(name)));
+		t_token ret = *function_manager::get_instance()->select_realname_to_t_token(
+				function_manager::get_instance()->get_function_name(),
+				name);
 		printf("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n");
 		printf("name:%s\n", name.c_str());
 		printf("funcname:%s\n", function_manager::get_instance()->get_function_name().c_str());
@@ -62,7 +63,7 @@
 	// というわけで、t_token ２つを結合して 前置き文をもっている t_token を生成する関数
 	t_token* t_token::string_concatenation(const t_token& t1, const t_token& t2) {
 		t_token * ret = new t_token();
-		const temp_val &temp = variable_manager::get_instance()->lend_temporary_variable();
+		const t_token &temp = variable_manager::get_instance()->lend_temporary_variable();
 
 		ret->preamble_str = t1.preamble_str + "\n" + t2.preamble_str;
 		if( (t1.type == TYPE_STRING) && (t2.type == TYPE_STRING) ) {
@@ -74,8 +75,8 @@
 		} else {
 			yyerror("[ERROR] Internal error. string concatenation type missmatch.\n");
 		}
-		ret->preamble_str += temp.name + "=inputstr\n";
-		ret->token_str = temp.name;
+		ret->preamble_str += temp.physicalname + "=inputstr\n";
+		ret->token_str = temp.physicalname;
 		ret->type = TYPE_STRING;
 		std::cout << "preamble:" << ret->preamble_str << "\n";
 		std::cout << "token_str:" << ret->token_str << "\n";

@@ -21,4 +21,4 @@ else
 endif
 
 clean:
-	rm -f parser.cpp tokens.cpp parser.hpp ttlcc
+	rm -f parser.cpp tokens.cpp parser.hpp ttlcc ttlc_conflict.log ttlcc.tab.c ttlcc.tab.h
