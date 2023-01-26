@@ -76,7 +76,15 @@ program		:	program functionst				{
 													$$ = new t_token(*$1 + *$2); 
 													output_to_file($2->token_str);
 												}
+			|	program prototypest				{
+													$$ = new t_token(*$1 + *$2); 
+													output_to_file($2->token_str);
+												}
 			|	functionst						{
+													$$ = $1;
+													output_to_file($1->token_str);
+												}
+			|	prototypest						{
 													$$ = $1;
 													output_to_file($1->token_str);
 												}
@@ -99,7 +107,7 @@ functionst	:	FUNCTION return_types functionnamest BRACE args END_BRACE codes END
 														std::cout << "args:" << $5->token_str << "\n";
 														std::cout << "codes:" << $7->token_str << "\n";
 														// 関数情報を登録
-														function_manager::get_instance()->set_function_info($3->token_str, $5->token_str, $2->token_str);
+														function_manager::get_instance()->set_function_info($3->token_str, $5->token_str, $2->token_str, false);
 														// ラベルを生成
 														$$->token_str = 	std::string(
 																					":" + $3->token_str + "\n"
@@ -119,7 +127,7 @@ functionst	:	FUNCTION return_types functionnamest BRACE args END_BRACE codes END
 																temp->type = TYPE_VOID;
 																break;	// 登録しないで終了
 															}
-															function_manager::get_instance()->set_local_name($3->token_str, temp->real_name, *temp, true);
+															function_manager::get_instance()->set_localname_and_realname($3->token_str, temp->real_name, *temp, true);
 														}
 
 														// main関数内にいるなら exit でプログラム終了。	そうでなければ return
@@ -134,9 +142,9 @@ functionst	:	FUNCTION return_types functionnamest BRACE args END_BRACE codes END
 													}
 			;
 
-prototypest	:	EXTERN return_types functionnamest BRACE args END_BRACE {
+prototypest	:	EXTERN FUNCTION return_types functionnamest BRACE args END_BRACE {
 														// 関数情報を登録（TTLマクロ的には特にすることはない）
-														function_manager::get_instance()->set_function_info($3->token_str, $5->token_str, $2->token_str);
+														function_manager::get_instance()->set_function_info($4->token_str, $6->token_str, $3->token_str, true);
 												}
 
 return_types:	return_types typest				{
@@ -169,7 +177,7 @@ var			:	typest TOKEN					{
 													$$ = new t_token(*$2);
 													$$->type = $1->type;
 													// 変数名の設定
-													function_manager::get_instance()->set_local_name(
+													function_manager::get_instance()->set_localname_and_realname(
 														function_manager::get_instance()->get_function_name(),
 														$$->real_name,
 														*$$,
@@ -194,7 +202,7 @@ var			:	typest TOKEN					{
 													$$ = new t_token(*$2);
 													$$->type = $1->type;
 													// ローカル変数名の設定
-													function_manager::get_instance()->set_local_name(
+													function_manager::get_instance()->set_localname_and_realname(
 														function_manager::get_instance()->get_function_name(),
 														$$->real_name,
 														*$$,
@@ -220,7 +228,7 @@ var			:	typest TOKEN					{
 													$$ = new t_token(*$2);
 													$$->type = TYPE_INT_ARRAY;
 													// ローカル変数名の設定
-													function_manager::get_instance()->set_local_name(
+													function_manager::get_instance()->set_localname_and_realname(
 														function_manager::get_instance()->get_function_name(),
 														$$->real_name,
 														*$$,
@@ -233,7 +241,7 @@ var			:	typest TOKEN					{
 													$$ = new t_token(*$2);
 													$$->type = TYPE_STRING_ARRAY;
 													// ローカル変数名の設定
-													function_manager::get_instance()->set_local_name(
+													function_manager::get_instance()->set_localname_and_realname(
 														function_manager::get_instance()->get_function_name(),
 														$$->real_name,
 														*$$,
@@ -247,7 +255,7 @@ var			:	typest TOKEN					{
 													$$ = new t_token(*$2);
 													$$->type = TYPE_INT_ARRAY;
 													// ローカル変数名の設定
-													function_manager::get_instance()->set_local_name(
+													function_manager::get_instance()->set_localname_and_realname(
 														function_manager::get_instance()->get_function_name(),
 														$$->real_name,
 														*$$,
@@ -268,7 +276,7 @@ var			:	typest TOKEN					{
 													$$ = new t_token(*$2);
 													$$->type = TYPE_INT_ARRAY;
 													// ローカル変数名の設定
-													function_manager::get_instance()->set_local_name(
+													function_manager::get_instance()->set_localname_and_realname(
 														function_manager::get_instance()->get_function_name(),
 														$$->real_name,
 														*$$,
@@ -287,7 +295,7 @@ var			:	typest TOKEN					{
 													$$ = new t_token(*$2);
 													$$->type = $1->type;
 													// ローカル変数名の設定
-													function_manager::get_instance()->set_local_name(
+													function_manager::get_instance()->set_localname_and_realname(
 														function_manager::get_instance()->get_function_name(),
 														$$->real_name,
 														*$$,
@@ -318,6 +326,10 @@ args		:	args COMMA typest TOKEN			{
 			|	typest TOKEN					{ 
 													$$ = new t_token();
 													$$->token_str = $1->token_str + " " + $2->token_str;
+												}
+			|	VOID							{
+													$$ = new t_token();
+													$$->token_str = "";
 												}
 			;
 
@@ -736,7 +748,7 @@ std::string initialize_returnval(std::string & function_name) {
     int arg_cnt = 0;
     // std::cout << function_name << "  :xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx:  " << args <<"\n";
 	for(std::string x : arg_array){
-        ret += variable_manager::convert_name_to_local(function_name, std::string("arg") + std::to_string(arg_cnt++));
+        ret += variable_manager::convert_name_to_physical(function_name, std::string("arg") + std::to_string(arg_cnt++));
         ret += "=" + x + "\n";
 	}*/
     return ret;
@@ -771,6 +783,7 @@ std::string get_connector(std::string orig_label) {
 	return ret;
 }
 
- void yyerror (char const *s) {
-   fprintf (stderr, "%s\n", s);
- }
+void yyerror (char const *s) {
+	fprintf (stderr, "%s\n", s);
+	exit(-1);
+}

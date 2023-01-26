@@ -13,7 +13,10 @@ class function_info {
     std::string function_name;
     std::vector<std::string> argument_table;
     std::vector<std::string> return_val_table;
+    // realname → localname 変換用の参照テーブル
+    std::map<std::string, std::string> real_2_local_symbol_conv_tbl;
     int current_arg_cnt;
+    int current_var_cnt;
 };
 
 class function_manager {
@@ -42,6 +45,9 @@ private:
     // 関数情報管理構造体を取得する
     function_info * get_function_info(std::string & func_name) ;
 
+    // realname → localname 変換関数
+    void set_localname_to_conv_tbl(std::string function_name, std::string realname, std::string localname);
+    std::string convert_name_to_local(std::string function_name, std::string realname);
 public:
     /**
      * デストラクタ
@@ -66,7 +72,7 @@ public:
     
     // (5)プロトタイプ宣言から、引数・戻り値のリストを登録したい
     // (6)関数定義から、引数・戻り値のリストを登録したい
-    void set_function_info(std::string & func_name, std::string & input_args, std::string & retrn_vals) ;
+    void set_function_info(std::string & func_name, std::string & input_args, std::string & retrn_vals, bool is_prototype) ;
 
     // (7)関数呼び出し時に戻り値のリストを取得したい
     // (8)関数の中で戻り値のリストを取得したい
@@ -80,7 +86,7 @@ public:
     std::string get_function_name() ;
 
     // (11)関数の中で使用するローカル変数を登録したい
-    void set_local_name(std::string func_name, std::string real_name, t_token& token, bool is_function_argument) ;
+    void set_localname_and_realname(std::string func_name, std::string real_name, t_token& token, bool is_function_argument) ;
 
     /* 旧関数　下記の関数は最終的には削除する */
     // 関数情報
@@ -90,7 +96,7 @@ public:
     std::string initialize_arg(std::string & function_name, t_token & input_args) ;
     std::string initialize_returnval(std::string & function_name ) ;
     // ローカル変数の設定に関する処理
-    void set_local_name(std::string func_name, t_token& token, bool is_function_argument) ;
+    void set_localname_and_realname(std::string func_name, t_token& token, bool is_function_argument) ;
     t_token * get_local_name(std::string func_name, std::string var_name);
     */
 };

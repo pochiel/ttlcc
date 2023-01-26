@@ -1,3 +1,5 @@
+extern func void test_func(int abc)
+
 func int main(void)
 	test_func(100);
 	return 0;

@@ -34,16 +34,20 @@ variable_manager *variable_manager::get_instance()
     return _singleton;
 }
 
-void variable_manager::set_symbol_table(const std::string key, const t_token & v) {
-    var_symbol_tbl[key] = v;
+// localname から physicalnameを登録
+void variable_manager::set_physicalname_to_table(const std::string localname, t_token & v) {
+    // physicalname を作成して登録
+    v.physicalname = variable_manager::convert_name_to_physical(v.parent_function, v.localname);
+    var_symbol_tbl[localname] = v;
 }
 
-t_token variable_manager::get_symbol_table(const std::string key) {
-    return var_symbol_tbl[key];
+// localname から physicalnameのデータ型を取得
+t_token * variable_manager::get_physicalname_from_table(const std::string localname) {
+    return & var_symbol_tbl[localname];
 }
 
-// トークン名を実名からローカル名に変更する
-std::string variable_manager::convert_name_to_local(std::string function_name, std::string name) {
+// トークン名を localname から physicalname に変更する
+std::string variable_manager::convert_name_to_physical(std::string function_name, std::string name) {
     // ローカル変数名 = lo CRC32ハッシュ(16進8桁)[関数名+変数名][関数名10文字][変数名10文字]
     std::string temp = (function_name + name);
     std::string ret  = "lo" + common_utl::str_to_hash(temp)
@@ -78,44 +82,8 @@ void variable_manager::return_temporary_variable(t_token &v){
     v.is_lending = false;
 }
 
-// realname から localnameを引く。
-// 登録されていない場合、""を返す。
-std::string variable_manager::select_realname_to_localname(std::string function_name, std::string realname){
-    if (var_symbol_tbl.count(function_name + realname) == 0) {
-        return "";
-    }
-    return var_symbol_tbl[(function_name + realname)].localname;
-}
 // localname から physicalname を引く。
 // 登録されていない場合、""を返す。
-std::string variable_manager::select_localname_to_physicalname(std::string function_name, std::string realname){
-    // これだけはぶん回して検索する（参照ツリー作っちゃおうかな・・・）
-    for(auto node = var_symbol_tbl.begin(); node != var_symbol_tbl.end() ; node++){
-        if(node->second.localname == ""){
-            return node->second.physicalname;
-        }
-    }
-    return "select_localname_to_physicalname dummy not implemented";
+std::string variable_manager::select_localname_to_physicalname(std::string function_name, std::string localname){
+    return variable_manager::convert_name_to_physical(function_name, localname);
 }
-
-// realname から physicalname を引く。
-// 登録されていない場合、""を返す。
-std::string variable_manager::select_realname_to_physicalname(std::string function_name, std::string realname){
-    if (var_symbol_tbl.count(function_name + realname) == 0) {
-        return "";
-    }
-    return var_symbol_tbl[(function_name + realname)].physicalname;
-}
-// realnameを登録する
-std::string variable_manager::regist_realname(std::string function_name, std::string realname, std::string localname, bool is_argument){
-    t_token * p_symbol_node = new t_token();
-    p_symbol_node->real_name = realname;
-    p_symbol_node->parent_function = function_name;
-    p_symbol_node->localname = localname;
-    
-    // realname は最終的に (function_name + realname) でユニークになる
-    var_symbol_tbl[(function_name + realname)] = *p_symbol_node;
-    return "regist_realname dummy not  implemented";
-}
-std::string variable_manager::regist_many_realnames(std::string function_name, std::string realname, bool is_argument){    return "regist_many_realnames dummy implemented";}
-
