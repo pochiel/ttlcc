@@ -76,18 +76,12 @@ program		:	program functionst				{
 													$$ = new t_token(*$1 + *$2); 
 													output_to_file($2->token_str);
 												}
-			|	program prototypest				{
-													$$ = new t_token(*$1 + *$2); 
-													output_to_file($2->token_str);
-												}
+			|	program prototypest				{$$ = new t_token();}
 			|	functionst						{
 													$$ = $1;
 													output_to_file($1->token_str);
 												}
-			|	prototypest						{
-													$$ = $1;
-													output_to_file($1->token_str);
-												}
+			|	prototypest						{$$ = new t_token();}
 			;
 
 functionnamest	:	TOKEN						{ 
@@ -154,8 +148,14 @@ return_types:	return_types typest				{
 			|	typest							{ $$ = $1; }
 			;
 
-typest		:	INT								{ $$ = $1; }
-			|	STRING							{ $$ = $1; }
+typest		:	INT								{
+													$$ = new t_token();
+													$$->token_str = "int";
+												}
+			|	STRING							{
+													$$ = new t_token();
+													$$->token_str = "string";
+												}
 			|	VOID							{ $$ = $1; }
 			;
 
@@ -320,14 +320,17 @@ var			:	typest TOKEN					{
 			;
 
 args		:	args COMMA typest TOKEN			{
+				printf("args args %d\n", __LINE__);
 													$$ = new t_token();
 													$$->token_str = $1->token_str + "," + $3->token_str + " " + $4->token_str;
 												}
 			|	typest TOKEN					{ 
+				printf("args args %d\n", __LINE__);
 													$$ = new t_token();
 													$$->token_str = $1->token_str + " " + $2->token_str;
 												}
 			|	VOID							{
+				printf("args args %d\n", __LINE__);
 													$$ = new t_token();
 													$$->token_str = "";
 												}
@@ -732,7 +735,9 @@ std::string initialize_arg(std::string & function_name, t_token & input_args) {
 	t_token * node = input_args.next_token;
 	std::string ret = "";
 	std::vector<std::string> arg_list = function_manager::get_instance()->select_functionname_to_argument_physicalname_list(function_name);
+	std::cout << "                     ******************************* input_args:" << input_args.token_str << "\n";
 	while(node != NULL){
+		std::cout << "                     ******************************* arg_list node:" << node << "\n";
 		int index = 0;
 		ret += arg_list[index] + "=" + node->token_str + "\n";
 		ret += "=" + node->token_str + "\n";
@@ -743,14 +748,14 @@ std::string initialize_arg(std::string & function_name, t_token & input_args) {
 
 // 戻り値の physical_name のリスト から初期値を代入するTTLコードを作成して返す
 std::string initialize_returnval(std::string & function_name) {
-    std::string ret = "initialize_returnval dummy";
-/*	std::vector<std::string> arg_array = common_utl::split(args, ' ');
+	std::vector<std::string> arg_array = function_manager::get_instance()->select_functionname_to_returnval_physicalname_list(function_name);
+	std::string ret = "";
     int arg_cnt = 0;
-    // std::cout << function_name << "  :xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx:  " << args <<"\n";
 	for(std::string x : arg_array){
+		std::cout << "                     ******************************* node:" << x << "\n";
         ret += variable_manager::convert_name_to_physical(function_name, std::string("arg") + std::to_string(arg_cnt++));
         ret += "=" + x + "\n";
-	}*/
+	}
     return ret;
 }
 

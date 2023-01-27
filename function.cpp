@@ -69,6 +69,9 @@ void function_manager::set_function_info(std::string & func_name, std::string & 
     // シンボルテーブルに関数情報が登録されていなければ登録する
     // シンボルテーブルに関数情報が登録されていない＝プロトタイプ宣言 or 関数定義実体
     // どちらかを見つけたら片方でだけ下記の処理を行う
+    func_name = common_utl::trim(func_name);
+    input_args = common_utl::trim(input_args);
+    retrn_vals = common_utl::trim(retrn_vals);
     if(function_symbol_tbl.count(func_name) == 0) {
         function_info * temp = new function_info();
         // 関数名を保存
@@ -85,14 +88,21 @@ void function_manager::set_function_info(std::string & func_name, std::string & 
         int current_arg_cnt = 0;
         for(std::string y : ret_array){
             temp->return_val_table.push_back(y);        // 型情報だけ追加
+        }
+        // 関数テーブルに追加
+        function_symbol_tbl[func_name] = temp;
+
+        // 戻り値実体変数を作成
+        // set_localname_and_realname の中で関数テーブルにアクセスしているので
+        // 関数テーブルに値を追加してから戻り値を登録しないとコンパイルエラーになってしまう
+        for(std::string y : ret_array){
             // 戻り値はユニークな realname を持たないため、プロトタイプ宣言の時点で実体変数を登録してしまう
             t_token * token_ptr = new t_token();
             std::string retname = "ret" + std::to_string(current_arg_cnt);
             set_localname_and_realname(func_name, retname, *token_ptr, true );
             current_arg_cnt++;
         }
-        // 関数テーブルに追加
-        function_symbol_tbl[func_name] = temp;
+
     }
     // シンボルテーブルに関数情報登録済み かつ 関数定義実体作成時のみ変数の登録を行う
     if( !is_prototype ){    // プロトタイプ宣言では変数の実体は作らない

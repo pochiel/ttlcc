@@ -26,3 +26,21 @@ std::string common_utl::str_to_hash(std::string name) {
     return ss.str();
 }
 
+const std::string WHITESPACE = " \n\r\t\f\v";
+ 
+std::string common_utl::ltrim(const std::string &s)
+{
+    size_t start = s.find_first_not_of(WHITESPACE);
+    return (start == std::string::npos) ? "" : s.substr(start);
+}
+ 
+std::string common_utl::rtrim(const std::string &s)
+{
+    size_t end = s.find_last_not_of(WHITESPACE);
+    return (end == std::string::npos) ? "" : s.substr(0, end + 1);
+}
+ 
+std::string common_utl::trim(const std::string &s) {
+    return rtrim(ltrim(s));
+}
+ 
