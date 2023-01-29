@@ -1,3 +1,5 @@
+extern func void test_func(int x)
+
 func int main(void)
     int i=0;
     // 普通に1から

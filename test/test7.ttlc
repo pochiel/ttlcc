@@ -1,3 +1,8 @@
+extern func int int int int plus_4times(int a1, int a2, int a3, int a4, int b1, int b2, int b3, int b4 )
+extern func int int int int minus_4times(int a1, int a2, int a3, int a4, int b1, int b2, int b3, int b4 )
+extern func int int int int multi_4times(int a1, int a2, int a3, int a4, int b1, int b2, int b3, int b4 )
+extern func int int int int div_4times(int a1, int a2, int a3, int a4, int b1, int b2, int b3, int b4 )
+
 // 配列、複数引数、複数戻り値、複数関数のテスト
 func int main(void)
     int ret[4];

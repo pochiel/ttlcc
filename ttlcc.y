@@ -25,6 +25,9 @@ uint32_t get_comment_index();
 extern "C" void yyerror(const char* s);
 extern "C" int  yylex(void);
 
+void breakp(t_token & t){
+
+}
 %}
 
 %code requires {
@@ -72,16 +75,18 @@ extern "C" int  yylex(void);
 %%
 
 /* プログラムとはなんぞや */
-program		:	program functionst				{
-													$$ = new t_token(*$1 + *$2); 
-													output_to_file($2->token_str);
-												}
-			|	program prototypest				{$$ = new t_token();}
-			|	functionst						{
-													$$ = $1;
-													output_to_file($1->token_str);
-												}
-			|	prototypest						{$$ = new t_token();}
+program		:	program functionst codes ENDFUNCTION	{
+															$$ = new t_token( *$2 + *$3); 
+															$$->token_str += "return\n";
+															output_to_file($$->token_str);
+														}
+			|	program prototypest						{$$ = new t_token();}
+			|	functionst codes ENDFUNCTION			{
+															$$ = new t_token(*$1 + *$2); 
+															$$->token_str += "return\n";
+															output_to_file($$->token_str);
+														}
+			|	prototypest								{$$ = new t_token();}
 			;
 
 functionnamest	:	TOKEN						{ 
@@ -94,45 +99,20 @@ functionnamest	:	TOKEN						{
 												}
 
 /* 関数とはなんぞや */
-functionst	:	FUNCTION return_types functionnamest BRACE args END_BRACE codes ENDFUNCTION	{
+functionst	:	FUNCTION return_types functionnamest BRACE args END_BRACE {
 														$$ = new t_token();
 														std::cout << "return_types:" << $2->token_str << "\n";
 														std::cout << "TOKEN:" << $3->token_str << "\n";
 														std::cout << "args:" << $5->token_str << "\n";
-														std::cout << "codes:" << $7->token_str << "\n";
 														// 関数情報を登録
 														function_manager::get_instance()->set_function_info($3->token_str, $5->token_str, $2->token_str, false);
 														// ラベルを生成
-														$$->token_str = 	std::string(
+														$$->token_str = std::string(
 																					":" + $3->token_str + "\n"
-																					+ $7->token_str + "\n"
 														);
-														// 引数にアクセスできるようにローカル変数として登録
-														std::vector<std::string> var_array = common_utl::split($5->token_str, ',');
-														for(std::string x : var_array){
-															std::vector<std::string> var = common_utl::split(x, ' ');
-															t_token * temp = new t_token();
-															temp->real_name = var[1];
-															if(var[0]=="int"){
-																temp->type = TYPE_INT;
-															} else if(var[0]=="string") {
-																temp->type = TYPE_STRING;
-															} else {
-																temp->type = TYPE_VOID;
-																break;	// 登録しないで終了
-															}
-															function_manager::get_instance()->set_localname_and_realname($3->token_str, temp->real_name, *temp, true);
-														}
 
-														// main関数内にいるなら exit でプログラム終了。	そうでなければ return
-														// 暫定：最終的にはマクロ先頭で call main ジャンプするようにし、returnで戻ってきて終了するのが好ましい。
-														// そのためには、全コードをトランスパイル後に 関数テーブルを走査し、main関数をもっている場合といない場合で
-														// 処理を分けなきゃならん。　めんど。
-														if(function_manager::get_instance()->get_function_name()=="main") {
-															$$->token_str += "exit\n";
-														} else {
-															$$->token_str += "return\n";
-														}
+														$$->type = TYPE_FUNCTION;
+														$$->real_name = $3->token_str;
 													}
 			;
 
@@ -144,6 +124,7 @@ prototypest	:	EXTERN FUNCTION return_types functionnamest BRACE args END_BRACE {
 return_types:	return_types typest				{
 													$$ = new t_token();
 													$$->token_str = $1->token_str + " " + $2->token_str;
+													breakp(*$$);
 												}
 			|	typest							{ $$ = $1; }
 			;
@@ -151,10 +132,12 @@ return_types:	return_types typest				{
 typest		:	INT								{
 													$$ = new t_token();
 													$$->token_str = "int";
+													$$->type = TYPE_INT;
 												}
 			|	STRING							{
 													$$ = new t_token();
 													$$->token_str = "string";
+													$$->type = TYPE_STRING;
 												}
 			|	VOID							{ $$ = $1; }
 			;
@@ -176,12 +159,18 @@ initialize_strval_st	:	initialize_strval_st COMMA STR_RETERAL	{
 var			:	typest TOKEN					{
 													$$ = new t_token(*$2);
 													$$->type = $1->type;
+													printf(" ===================================================================== $1->type;=%d\n", $1->type);
 													// 変数名の設定
 													function_manager::get_instance()->set_localname_and_realname(
 														function_manager::get_instance()->get_function_name(),
-														$$->real_name,
+														$2->token_str,
 														*$$,
 														false
+													);
+													// 実際に使用する変数は physicalname なので、 token_str には physicalnameを代入しておく
+													$$->token_str = function_manager::get_instance()->select_realname_to_physicalname(
+															function_manager::get_instance()->get_function_name(),
+															$2->token_str
 													);
 													switch($1->type){
 														case TYPE_STRING:
@@ -204,9 +193,14 @@ var			:	typest TOKEN					{
 													// ローカル変数名の設定
 													function_manager::get_instance()->set_localname_and_realname(
 														function_manager::get_instance()->get_function_name(),
-														$$->real_name,
+														$2->token_str,
 														*$$,
 														false
+													);
+													// 実際に使用する変数は physicalname なので、 token_str には physicalnameを代入しておく
+													$$->token_str = function_manager::get_instance()->select_realname_to_physicalname(
+															function_manager::get_instance()->get_function_name(),
+															$2->token_str
 													);
 													switch($1->type){
 														case TYPE_STRING:
@@ -230,9 +224,14 @@ var			:	typest TOKEN					{
 													// ローカル変数名の設定
 													function_manager::get_instance()->set_localname_and_realname(
 														function_manager::get_instance()->get_function_name(),
-														$$->real_name,
+														$2->token_str,
 														*$$,
 														false
+													);
+													// 実際に使用する変数は physicalname なので、 token_str には physicalnameを代入しておく
+													$$->token_str = function_manager::get_instance()->select_realname_to_physicalname(
+															function_manager::get_instance()->get_function_name(),
+															$2->token_str
 													);
 													$$->token_str = "intdim " + $$->token_str + " " + $5->token_str + "\n";
 												}
@@ -243,9 +242,14 @@ var			:	typest TOKEN					{
 													// ローカル変数名の設定
 													function_manager::get_instance()->set_localname_and_realname(
 														function_manager::get_instance()->get_function_name(),
-														$$->real_name,
+														$2->token_str,
 														*$$,
 														false
+													);
+													// 実際に使用する変数は physicalname なので、 token_str には physicalnameを代入しておく
+													$$->token_str = function_manager::get_instance()->select_realname_to_physicalname(
+															function_manager::get_instance()->get_function_name(),
+															$2->token_str
 													);
 													$$->token_str = "strdim " + $$->token_str + " " + $5->token_str + "\n";
 												}
@@ -257,9 +261,14 @@ var			:	typest TOKEN					{
 													// ローカル変数名の設定
 													function_manager::get_instance()->set_localname_and_realname(
 														function_manager::get_instance()->get_function_name(),
-														$$->real_name,
+														$2->token_str,
 														*$$,
 														false
+													);
+													// 実際に使用する変数は physicalname なので、 token_str には physicalnameを代入しておく
+													$$->token_str = function_manager::get_instance()->select_realname_to_physicalname(
+															function_manager::get_instance()->get_function_name(),
+															$2->token_str
 													);
 													std::string local_name = $$->token_str;
 													$$->token_str = "intdim " + local_name + " " + $5->token_str + "\n";
@@ -278,9 +287,14 @@ var			:	typest TOKEN					{
 													// ローカル変数名の設定
 													function_manager::get_instance()->set_localname_and_realname(
 														function_manager::get_instance()->get_function_name(),
-														$$->real_name,
+														$2->token_str,
 														*$$,
 														false
+													);
+													// 実際に使用する変数は physicalname なので、 token_str には physicalnameを代入しておく
+													$$->token_str = function_manager::get_instance()->select_realname_to_physicalname(
+															function_manager::get_instance()->get_function_name(),
+															$2->token_str
 													);
 													std::string local_name = $$->token_str;
 													$$->token_str = "strdim " + local_name + " " + $5->token_str + "\n";
@@ -297,9 +311,14 @@ var			:	typest TOKEN					{
 													// ローカル変数名の設定
 													function_manager::get_instance()->set_localname_and_realname(
 														function_manager::get_instance()->get_function_name(),
-														$$->real_name,
+														$2->token_str,
 														*$$,
 														false
+													);
+													// 実際に使用する変数は physicalname なので、 token_str には physicalnameを代入しておく
+													$$->token_str = function_manager::get_instance()->select_realname_to_physicalname(
+															function_manager::get_instance()->get_function_name(),
+															$2->token_str
 													);
 													switch($1->type){
 														case TYPE_STRING:
@@ -320,17 +339,14 @@ var			:	typest TOKEN					{
 			;
 
 args		:	args COMMA typest TOKEN			{
-				printf("args args %d\n", __LINE__);
 													$$ = new t_token();
 													$$->token_str = $1->token_str + "," + $3->token_str + " " + $4->token_str;
 												}
 			|	typest TOKEN					{ 
-				printf("args args %d\n", __LINE__);
 													$$ = new t_token();
 													$$->token_str = $1->token_str + " " + $2->token_str;
 												}
 			|	VOID							{
-				printf("args args %d\n", __LINE__);
 													$$ = new t_token();
 													$$->token_str = "";
 												}
@@ -367,6 +383,11 @@ accessable_var	:	TOKEN												{
 																					$1->token_str
 																				) )
 																			);
+																			// 実際に使用する変数は physicalname なので、 token_str には physicalnameを代入しておく
+																			$$->token_str = function_manager::get_instance()->select_realname_to_physicalname(
+																					function_manager::get_instance()->get_function_name(),
+																					$1->token_str
+																			);
 																		}
 				|	TOKEN LEFT_INDEX_BRACKET expr RIGHT_INDEX_BRACKET	{
 																			$$ = new t_token(
@@ -374,6 +395,11 @@ accessable_var	:	TOKEN												{
 																					function_manager::get_instance()->get_function_name(),
 																					$1->token_str
 																				) )
+																			);
+																			// 実際に使用する変数は physicalname なので、 token_str には physicalnameを代入しておく
+																			$$->token_str = function_manager::get_instance()->select_realname_to_physicalname(
+																					function_manager::get_instance()->get_function_name(),
+																					$1->token_str
 																			);
 																			$$->token_str += "[" + $3->token_str + "]";
 																		}
@@ -507,6 +533,11 @@ expr		: INT_RETERAL						{ $$ = $1; $$->type = TYPE_INT; }
 															$1->token_str
 														) )
 													);
+													// 実際に使用する変数は physicalname なので、 token_str には physicalnameを代入しておく
+													$$->token_str = function_manager::get_instance()->select_realname_to_physicalname(
+															function_manager::get_instance()->get_function_name(),
+															$1->token_str
+													);
 												}
 			// 配列の処理
 			| TOKEN	LEFT_INDEX_BRACKET expr RIGHT_INDEX_BRACKET	{
@@ -519,6 +550,11 @@ expr		: INT_RETERAL						{ $$ = $1; $$->type = TYPE_INT; }
 																function_manager::get_instance()->get_function_name(),
 																$1->token_str
 															) )
+														);
+														// 実際に使用する変数は physicalname なので、 token_str には physicalnameを代入しておく
+														$$->token_str = function_manager::get_instance()->select_realname_to_physicalname(
+																function_manager::get_instance()->get_function_name(),
+																$1->token_str
 														);
 														$$->token_str += "[" + $3->token_str + "]";
 														switch($$->type){
@@ -732,16 +768,18 @@ retrnst		:	RETRN expr		{
 
 // 引数の physical_name のリスト と arg 初期値リスト から初期値を代入するTTLコードを作成して返す
 std::string initialize_arg(std::string & function_name, t_token & input_args) {
-	t_token * node = input_args.next_token;
+	t_token * node = &input_args;
 	std::string ret = "";
 	std::vector<std::string> arg_list = function_manager::get_instance()->select_functionname_to_argument_physicalname_list(function_name);
-	std::cout << "                     ******************************* input_args:" << input_args.token_str << "\n";
-	while(node != NULL){
-		std::cout << "                     ******************************* arg_list node:" << node << "\n";
-		int index = 0;
-		ret += arg_list[index] + "=" + node->token_str + "\n";
-		ret += "=" + node->token_str + "\n";
-		node = node->next_token;
+	if( (node->token_str=="") || (arg_list.size()==0)){
+		// 引数指定なし do nothing.
+	} else {
+		// 引数発見！砲撃開始！
+		do {
+			int index = 0;
+			ret += arg_list[index] + "=" + node->token_str + "\n";
+			node = node->next_token;
+		} while(node != NULL);
 	}
 	return ret;
 }
@@ -771,6 +809,7 @@ void get_comment(std::string &buf) {
 }
 
 void output_to_file(std::string &msg){
+	fprintf(stdout, "**********************************************\n%s", msg.c_str()); // ファイルに書く
 	fprintf(output_file_ptr, "%s", msg.c_str()); // ファイルに書く
 }
 

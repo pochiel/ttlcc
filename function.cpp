@@ -42,7 +42,8 @@ std::string function_manager::select_realname_to_physicalname(std::string functi
 
 // (1)-2 グローバル/ローカル変数変数を t_token に読み替える
 t_token * function_manager::select_realname_to_t_token(std::string function_name, std::string realname) {
-    return my_variable_manager->get_physicalname_from_table(convert_name_to_local(function_name, realname));
+    t_token * ret = my_variable_manager->get_physicalname_from_table(convert_name_to_local(function_name, realname));
+    return ret;
 }
 
 // (3)関数呼び出し時に引数セットをphysical_nameのセットに読み替えたい
@@ -56,7 +57,7 @@ std::vector<std::string> function_manager::select_functionname_to_argument_physi
         ret.push_back( 
             my_variable_manager->select_localname_to_physicalname(
                                                                     funciton_name,
-                                                                    "arg" + std::to_string(func_info->current_arg_cnt)
+                                                                    "arg" + std::to_string(current_arg_cnt++)
                                                                 )
         );
     }
@@ -106,15 +107,20 @@ void function_manager::set_function_info(std::string & func_name, std::string & 
     }
     // シンボルテーブルに関数情報登録済み かつ 関数定義実体作成時のみ変数の登録を行う
     if( !is_prototype ){    // プロトタイプ宣言では変数の実体は作らない
-        int current_arg_cnt = 0;
         // 引数の実体を登録する
         std::vector<std::string> var_array = common_utl::split(input_args, ',');
         for(std::string x : var_array){
             std::vector<std::string> var = common_utl::split(x, ' ');
             // t_tokenは作り直す
             t_token * token_ptr = new t_token();
+            if(var[0]=="int"){
+                token_ptr->type = TYPE_INT;
+            } else if(var[0]=="string") {
+                token_ptr->type = TYPE_STRING;
+            } else {
+                token_ptr->type = TYPE_VOID;
+            }
             set_localname_and_realname(func_name, var[1], *token_ptr, true );
-            current_arg_cnt++;
         }
     }
 }
@@ -130,7 +136,7 @@ std::vector<std::string> function_manager::select_functionname_to_returnval_phys
         ret.push_back( 
             my_variable_manager->select_localname_to_physicalname(
                                                                     funciton_name,
-                                                                    "ret" + std::to_string(func_info->current_arg_cnt)
+                                                                    "ret" + std::to_string(current_arg_cnt++)
                                                                 )
         );
     }
@@ -152,7 +158,7 @@ std::string function_manager::get_function_name() {
 // (11)関数の中で使用するローカル変数を登録したい
 void function_manager::set_localname_and_realname(std::string func_name, std::string real_name, t_token& token, bool is_function_argument) {
     function_info * func_info = get_function_info(func_name);
-    t_token temp;
+    t_token * temp = new t_token(token);
     if(!func_info) {
         char buf[C_ERRORBUF_MAX];
         snprintf(buf, sizeof(buf), "Error! Inner error. cant find function info %s\n", func_name.c_str());
@@ -161,19 +167,21 @@ void function_manager::set_localname_and_realname(std::string func_name, std::st
     // localnameの登録
     if(is_function_argument){
         // 関数引数
-        temp.localname = "arg" + std::to_string(func_info->current_arg_cnt);
+        temp->localname = "arg" + std::to_string(func_info->current_arg_cnt);
+        func_info->current_arg_cnt++;
     } else {
         // 単なる変数
-        temp.localname = "var" + std::to_string(func_info->current_arg_cnt);
+        temp->localname = "var" + std::to_string(func_info->current_var_cnt);
+        func_info->current_var_cnt++;
     }
-    set_localname_to_conv_tbl(func_name, real_name, temp.localname);
-    temp.realname = token.real_name;
-    temp.is_lending = false;
-    temp.parent_function = func_name;
-    temp.synbol_info = &token;
+    set_localname_to_conv_tbl(func_name, real_name, temp->localname);
+    temp->realname = token.real_name;
+    temp->is_lending = false;
+    temp->parent_function = func_name;
+    temp->synbol_info = &token;
     // physicalname の登録
-    temp.physicalname = "";     // physicalname は variable_manager におまかせ
-    my_variable_manager->set_physicalname_to_table(temp.physicalname, temp);
+    temp->physicalname = "";     // physicalname は variable_manager におまかせ
+    my_variable_manager->set_physicalname_to_table(temp->localname, *temp);
 }
 
 // 関数名から関数情報を引く

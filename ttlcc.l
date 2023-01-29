@@ -10,6 +10,7 @@ extern "C" int yylex();
 extern int yyparse();
 #ifdef DEBUGOUT
 extern int yydebug;
+extern void yyerror(char const*);
 #endif
 
 // _b__buf__ は char *
@@ -392,8 +393,6 @@ NUMBER   {integer}
 
 #define C_OUTPUT_FILE_MAX    (256)
 
-void yyerror(char const*){
-}
 /*****************************************************************************************************************************************************************
 	エントリーポイント
 ******************************************************************************************************************************************************************/
@@ -449,6 +448,9 @@ int main(int argc, char *argv[])
     /* 構文解析関数 yyparse */
     yyin = fptr_r;
     output_file_ptr = fptr_w;
+	/* アウトプットファイル初期化（main関数呼び出しから開始）*/
+	fprintf(output_file_ptr, "call main\nexit\n");
+	/* パース開始 */
     if( yyparse() != 0 ){
         printf("parse error.\n");
     }
