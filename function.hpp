@@ -8,14 +8,30 @@
 #ifndef __FUNCTION_H__
 #define __FUNCTION_H__
 
+typedef enum {
+    E_KIND_FUNCTION_ARGUMENT = 0,
+    E_KIND_FUNCTION_RETURN_VALUE,
+    E_KIND_VARIABLE,
+} E_VARIABLE_KIND;
+
 class function_info {
     public:
+    function_info() {
+        function_name = "";
+        current_arg_cnt = 0;
+        current_ret_cnt = 0;
+        current_var_cnt = 0;
+    }
+    ~function_info() {
+
+    }
     std::string function_name;
     std::vector<t_token> argument_table;
     std::vector<t_token> return_val_table;
     // realname → localname 変換用の参照テーブル
     std::map<std::string, std::string> real_2_local_symbol_conv_tbl;
     int current_arg_cnt;
+    int current_ret_cnt;
     int current_var_cnt;
 };
 
@@ -88,7 +104,7 @@ public:
     std::string get_function_name() ;
 
     // (11)関数の中で使用するローカル変数を登録したい
-    void set_localname_and_realname(std::string func_name, std::string real_name, t_token& token, bool is_function_argument) ;
+    void set_localname_and_realname(std::string func_name, std::string realname, t_token& token, E_VARIABLE_KIND variable_kind) ;
 
     /* 旧関数　下記の関数は最終的には削除する */
     // 関数情報

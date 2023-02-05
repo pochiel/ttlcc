@@ -9,7 +9,7 @@ func int main(void)
     // 1,2,3,4 に 5,6,7,8 を足す
     [ret[0], ret[1], ret[2], ret[3]] = plus_4times(1,2,3,4,5,6,7,8);
     messagebox((ret[0] + ", " + ret[1] + ", " + ret[2] + ", " + ret[3]), "足し算");
-/*    // 1,2,3,4 から 5,6,7,8 を引く
+    // 1,2,3,4 から 5,6,7,8 を引く
     [ret[0], ret[1], ret[2], ret[3]] = minus_4times(1,2,3,4,5,6,7,8);
     messagebox((ret[0] + ", " + ret[1] + ", " + ret[2] + ", " + ret[3]), "引き算");
     // 1,2,3,4 に 5,6,7,8 をかける
@@ -18,23 +18,21 @@ func int main(void)
     // 5,6,7,8 を 1,2,3,4 で割る
     [ret[0], ret[1], ret[2], ret[3]] = div_4times(5,6,7,8,1,2,3,4);
     messagebox((ret[0] + ", " + ret[1] + ", " + ret[2] + ", " + ret[3]), "割り算");
-  */  
 	return 0;
 endfunc
 
 func int int int int plus_4times(int a1, int a2, int a3, int a4, int b1, int b2, int b3, int b4 )
   return [(a1+b1), (a2+b2), (a3+b3), (a4+b4)];
 endfunc
-/*
+
 func int int int int minus_4times(int a1, int a2, int a3, int a4, int b1, int b2, int b3, int b4 )
-  return (a1-b1), (a2-b2), (a3-b3), (a4-b4);
+  return [(a1-b1), (a2-b2), (a3-b3), (a4-b4)];
 endfunc
 
 func int int int int multi_4times(int a1, int a2, int a3, int a4, int b1, int b2, int b3, int b4 )
-  return (a1*b1), (a2*b2), (a3*b3), (a4*b4);
+  return [(a1*b1), (a2*b2), (a3*b3), (a4*b4)];
 endfunc
 
 func int int int int div_4times(int a1, int a2, int a3, int a4, int b1, int b2, int b3, int b4 )
-  return (a1/b1), (a2/b2), (a3/b3), (a4/b4);
+  return [(a1/b1), (a2/b2), (a3/b3), (a4/b4)];
 endfunc
-*/

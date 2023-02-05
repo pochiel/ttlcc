@@ -11,7 +11,7 @@
 	t_token::t_token(){
 		token_str = "";
 		is_local = false;
-		real_name="";
+		realname="";
 		preamble_str="";
 		next_token = NULL;
 		localname = "";

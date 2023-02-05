@@ -88,14 +88,13 @@ void function_manager::set_function_info(std::string & func_name, std::vector<t_
         temp->return_val_table = retrn_vals;
         // 関数テーブルに追加
         function_symbol_tbl[func_name] = temp;
-
         // 戻り値実体変数を作成
         // set_localname_and_realname の中で関数テーブルにアクセスしているので
         // 関数テーブルに値を追加してから戻り値を登録しないとコンパイルエラーになってしまう
         for(t_token y : retrn_vals){
             // 戻り値はユニークな realname を持たないため、プロトタイプ宣言の時点で実体変数を登録してしまう
             std::string retname = "ret" + std::to_string(current_arg_cnt++);
-            set_localname_and_realname(func_name, retname, y, true );
+            set_localname_and_realname(func_name, retname, y, E_KIND_FUNCTION_RETURN_VALUE );
         }
 
     }
@@ -103,7 +102,7 @@ void function_manager::set_function_info(std::string & func_name, std::vector<t_
     if( !is_prototype ){    // プロトタイプ宣言では変数の実体は作らない
         // 引数の実体を登録する
         for(t_token x : input_args){
-            set_localname_and_realname(func_name, x.token_str, x, true );
+            set_localname_and_realname(func_name, x.token_str, x, E_KIND_FUNCTION_ARGUMENT );
         }
     }
 }
@@ -143,7 +142,7 @@ std::string function_manager::get_function_name() {
 }
 
 // (11)関数の中で使用するローカル変数を登録したい
-void function_manager::set_localname_and_realname(std::string func_name, std::string real_name, t_token& token, bool is_function_argument) {
+void function_manager::set_localname_and_realname(std::string func_name, std::string realname, t_token& token, E_VARIABLE_KIND variable_kind) {
     function_info * func_info = get_function_info(func_name);
     t_token * temp = new t_token(token);
     if(!func_info) {
@@ -152,17 +151,27 @@ void function_manager::set_localname_and_realname(std::string func_name, std::st
         yyerror(buf);
     }
     // localnameの登録
-    if(is_function_argument){
-        // 関数引数
-        temp->localname = "arg" + std::to_string(func_info->current_arg_cnt);
-        func_info->current_arg_cnt++;
-    } else {
-        // 単なる変数
-        temp->localname = "var" + std::to_string(func_info->current_var_cnt);
-        func_info->current_var_cnt++;
+    switch(variable_kind) {
+        case E_KIND_FUNCTION_ARGUMENT:
+            // 関数引数
+            temp->localname = "arg" + std::to_string(func_info->current_arg_cnt);
+            func_info->current_arg_cnt++;
+            break;
+        case E_KIND_FUNCTION_RETURN_VALUE:
+            // 単なる変数
+            temp->localname = "ret" + std::to_string(func_info->current_ret_cnt);
+            func_info->current_ret_cnt++;
+            break;
+        case E_KIND_VARIABLE:
+            // 単なる変数
+            temp->localname = "var" + std::to_string(func_info->current_var_cnt);
+            func_info->current_var_cnt++;
+            break;
+        default:
+            break;
     }
-    set_localname_to_conv_tbl(func_name, real_name, temp->localname);
-    temp->realname = token.real_name;
+    set_localname_to_conv_tbl(func_name, realname, temp->localname);
+    temp->realname = token.realname;
     temp->is_lending = false;
     temp->parent_function = func_name;
     temp->synbol_info = &token;

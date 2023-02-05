@@ -24,7 +24,6 @@ public:
 	// ローカル変数であるかどうか
 	bool is_local;
 	// コード中どんな名前で呼ばれているか
-	std::string real_name;
     std::string parent_function;
     std::string realname;
     std::string localname;
