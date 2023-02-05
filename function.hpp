@@ -11,8 +11,8 @@
 class function_info {
     public:
     std::string function_name;
-    std::vector<std::string> argument_table;
-    std::vector<std::string> return_val_table;
+    std::vector<t_token> argument_table;
+    std::vector<t_token> return_val_table;
     // realname → localname 変換用の参照テーブル
     std::map<std::string, std::string> real_2_local_symbol_conv_tbl;
     int current_arg_cnt;
@@ -69,14 +69,16 @@ public:
     // (3)関数呼び出し時に引数セットをphysical_nameのセットに読み替えたい
     // (4)関数内で任意の引数をphysical_nameのセットに読み替えたい((2)で実現できるのでは？)
     std::vector<std::string> select_functionname_to_argument_physicalname_list(std::string funciton_name);
+    std::vector<t_token> select_functionname_to_argument_t_token_info_list(std::string funciton_name);
     
     // (5)プロトタイプ宣言から、引数・戻り値のリストを登録したい
     // (6)関数定義から、引数・戻り値のリストを登録したい
-    void set_function_info(std::string & func_name, std::string & input_args, std::string & retrn_vals, bool is_prototype) ;
+    void set_function_info(std::string & func_name, std::vector<t_token> & input_args, std::vector<t_token> & retrn_vals, bool is_prototype) ;
 
     // (7)関数呼び出し時に戻り値のリストを取得したい
     // (8)関数の中で戻り値のリストを取得したい
     std::vector<std::string> select_functionname_to_returnval_physicalname_list(std::string funciton_name);
+    std::vector<t_token> select_functionname_to_returnval_t_token_info_list(std::string funciton_name);
 
     
     // (9)現在実行中の関数名を登録する

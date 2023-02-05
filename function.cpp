@@ -51,9 +51,9 @@ t_token * function_manager::select_realname_to_t_token(std::string function_name
 std::vector<std::string> function_manager::select_functionname_to_argument_physicalname_list(std::string funciton_name) {
     function_info * func_info = get_function_info(funciton_name);
     std::vector<std::string> ret;
-    for(std::string arg : func_info->argument_table){
+    int current_arg_cnt = 0;
+    for(t_token arg : func_info->argument_table){
         // 型情報を取り出して、"argX" のルールで localnameを作り、そこからさらに physicalname に変換してvectorに登録する
-        int current_arg_cnt = 0;
         ret.push_back( 
             my_variable_manager->select_localname_to_physicalname(
                                                                     funciton_name,
@@ -64,63 +64,46 @@ std::vector<std::string> function_manager::select_functionname_to_argument_physi
     return ret;
 }
 
+std::vector<t_token> function_manager::select_functionname_to_argument_t_token_info_list(std::string funciton_name) {
+    function_info * func_info = get_function_info(funciton_name);
+    return func_info->argument_table;
+}
+
+
 // (5)プロトタイプ宣言から、引数・戻り値のリストを登録したい
 // (6)関数定義から、引数・戻り値のリストを登録したい
-void function_manager::set_function_info(std::string & func_name, std::string & input_args, std::string & retrn_vals, bool is_prototype){
+void function_manager::set_function_info(std::string & func_name, std::vector<t_token> & input_args, std::vector<t_token> & retrn_vals, bool is_prototype){
     // シンボルテーブルに関数情報が登録されていなければ登録する
     // シンボルテーブルに関数情報が登録されていない＝プロトタイプ宣言 or 関数定義実体
     // どちらかを見つけたら片方でだけ下記の処理を行う
     func_name = common_utl::trim(func_name);
-    input_args = common_utl::trim(input_args);
-    retrn_vals = common_utl::trim(retrn_vals);
+    int current_arg_cnt = 0;
     if(function_symbol_tbl.count(func_name) == 0) {
         function_info * temp = new function_info();
         // 関数名を保存
         temp->function_name = func_name;
-
         // 引数情報を保存
-        std::vector<std::string> var_array = common_utl::split(input_args, ',');
-        for(std::string x : var_array){
-            std::vector<std::string> var = common_utl::split(x, ' ');
-            temp->argument_table.push_back(var[0]);     // 型情報だけ追加
-        }
+        temp->argument_table = input_args;
         // 戻り値情報を保存
-        std::vector<std::string> ret_array = common_utl::split(retrn_vals, ' ');
-        int current_arg_cnt = 0;
-        for(std::string y : ret_array){
-            temp->return_val_table.push_back(y);        // 型情報だけ追加
-        }
+        temp->return_val_table = retrn_vals;
         // 関数テーブルに追加
         function_symbol_tbl[func_name] = temp;
 
         // 戻り値実体変数を作成
         // set_localname_and_realname の中で関数テーブルにアクセスしているので
         // 関数テーブルに値を追加してから戻り値を登録しないとコンパイルエラーになってしまう
-        for(std::string y : ret_array){
+        for(t_token y : retrn_vals){
             // 戻り値はユニークな realname を持たないため、プロトタイプ宣言の時点で実体変数を登録してしまう
-            t_token * token_ptr = new t_token();
-            std::string retname = "ret" + std::to_string(current_arg_cnt);
-            set_localname_and_realname(func_name, retname, *token_ptr, true );
-            current_arg_cnt++;
+            std::string retname = "ret" + std::to_string(current_arg_cnt++);
+            set_localname_and_realname(func_name, retname, y, true );
         }
 
     }
     // シンボルテーブルに関数情報登録済み かつ 関数定義実体作成時のみ変数の登録を行う
     if( !is_prototype ){    // プロトタイプ宣言では変数の実体は作らない
         // 引数の実体を登録する
-        std::vector<std::string> var_array = common_utl::split(input_args, ',');
-        for(std::string x : var_array){
-            std::vector<std::string> var = common_utl::split(x, ' ');
-            // t_tokenは作り直す
-            t_token * token_ptr = new t_token();
-            if(var[0]=="int"){
-                token_ptr->type = TYPE_INT;
-            } else if(var[0]=="string") {
-                token_ptr->type = TYPE_STRING;
-            } else {
-                token_ptr->type = TYPE_VOID;
-            }
-            set_localname_and_realname(func_name, var[1], *token_ptr, true );
+        for(t_token x : input_args){
+            set_localname_and_realname(func_name, x.token_str, x, true );
         }
     }
 }
@@ -130,9 +113,9 @@ void function_manager::set_function_info(std::string & func_name, std::string & 
 std::vector<std::string> function_manager::select_functionname_to_returnval_physicalname_list(std::string funciton_name){
     function_info * func_info = get_function_info(funciton_name);
     std::vector<std::string> ret;
-    for(std::string arg : func_info->return_val_table){
+    int current_arg_cnt = 0;
+    for(t_token arg : func_info->return_val_table){
         // 型情報を取り出して、"retX" のルールで localnameを作り、そこからさらに physicalname に変換してvectorに登録する
-        int current_arg_cnt = 0;
         ret.push_back( 
             my_variable_manager->select_localname_to_physicalname(
                                                                     funciton_name,
@@ -141,6 +124,10 @@ std::vector<std::string> function_manager::select_functionname_to_returnval_phys
         );
     }
     return ret;
+}
+std::vector<t_token> function_manager::select_functionname_to_returnval_t_token_info_list(std::string funciton_name) {
+    function_info * func_info = get_function_info(funciton_name);
+    return func_info->return_val_table;
 }
 
 // (9)現在実行中の関数名を登録する

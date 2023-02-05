@@ -13,7 +13,7 @@ typedef enum {
 
 class t_token {
 public:
-	t_token * next_token;
+	t_token * next_token;			// funciton_info の argument_table/return_val_table に t_token * のリストを代入するための線形リスト用ポインタ
 	t_token();
 	t_token(const t_token &t);
 	std::string token_str;

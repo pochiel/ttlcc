@@ -25,8 +25,13 @@ uint32_t get_comment_index();
 extern "C" void yyerror(const char* s);
 extern "C" int  yylex(void);
 
-void breakp(t_token & t){
-
+void breakp(t_token & t, std::vector<t_token> i){
+	t_token * tmp_token_ptr = &t;
+	std::vector<t_token> input_list;
+	while(tmp_token_ptr!=NULL){
+		input_list.push_back(*tmp_token_ptr);
+		tmp_token_ptr = tmp_token_ptr->next_token;
+	}
 }
 %}
 
@@ -104,8 +109,24 @@ functionst	:	FUNCTION return_types functionnamest BRACE args END_BRACE {
 														std::cout << "return_types:" << $2->token_str << "\n";
 														std::cout << "TOKEN:" << $3->token_str << "\n";
 														std::cout << "args:" << $5->token_str << "\n";
+														// 引数リストを作成
+														std::vector<t_token> input_list;
+														t_token * tmp_token_ptr = $5;
+														while(tmp_token_ptr!=NULL){
+															input_list.push_back(*tmp_token_ptr);
+															tmp_token_ptr = tmp_token_ptr->next_token;
+														}
+
+														// 戻り値リストを作成
+														std::vector<t_token> retrn_list;
+														tmp_token_ptr = $2;
+														while(tmp_token_ptr!=NULL){
+															retrn_list.push_back(*tmp_token_ptr);
+															tmp_token_ptr = tmp_token_ptr->next_token;
+														}
+
 														// 関数情報を登録
-														function_manager::get_instance()->set_function_info($3->token_str, $5->token_str, $2->token_str, false);
+														function_manager::get_instance()->set_function_info($3->token_str, input_list, retrn_list, false);
 														// ラベルを生成
 														$$->token_str = std::string(
 																					":" + $3->token_str + "\n"
@@ -117,14 +138,29 @@ functionst	:	FUNCTION return_types functionnamest BRACE args END_BRACE {
 			;
 
 prototypest	:	EXTERN FUNCTION return_types functionnamest BRACE args END_BRACE {
+														// 引数リストを作成
+														std::vector<t_token> input_list;
+														t_token * tmp_token_ptr = $6;
+														while(tmp_token_ptr!=NULL){
+															input_list.push_back(*tmp_token_ptr);
+															tmp_token_ptr = tmp_token_ptr->next_token;
+														}
+														// 戻り値リストを作成
+														std::vector<t_token> retrn_list;
+														tmp_token_ptr = $3;
+														while(tmp_token_ptr!=NULL){
+															retrn_list.push_back(*tmp_token_ptr);
+															tmp_token_ptr = tmp_token_ptr->next_token;
+														}
 														// 関数情報を登録（TTLマクロ的には特にすることはない）
-														function_manager::get_instance()->set_function_info($4->token_str, $6->token_str, $3->token_str, true);
+														function_manager::get_instance()->set_function_info($4->token_str, input_list, retrn_list, true);
 												}
 
 return_types:	return_types typest				{
-													$$ = new t_token();
+													$$ = new t_token(*$1);
 													$$->token_str = $1->token_str + " " + $2->token_str;
-													breakp(*$$);
+													$$->type = $2->type;
+													$$->next_token = $1;
 												}
 			|	typest							{ $$ = $1; }
 			;
@@ -339,16 +375,22 @@ var			:	typest TOKEN					{
 			;
 
 args		:	args COMMA typest TOKEN			{
-													$$ = new t_token();
+													$$ = new t_token(*$1);
 													$$->token_str = $1->token_str + "," + $3->token_str + " " + $4->token_str;
+													$$->type = $3->type;
+													$$->next_token = $1;
 												}
 			|	typest TOKEN					{ 
 													$$ = new t_token();
 													$$->token_str = $1->token_str + " " + $2->token_str;
+													$$->type = $1->type;
+													$$->next_token = NULL;
 												}
 			|	VOID							{
 													$$ = new t_token();
 													$$->token_str = "";
+													$$->type = TYPE_VOID;
+													$$->next_token = NULL;
 												}
 			;
 
@@ -646,7 +688,6 @@ manytokenst	: manytokenst COMMA expr				{
 														$$ = new t_token(*$3);
 														$$->preamble_str=$1->preamble_str + $3->preamble_str;
 														$$->token_str = $1->token_str + " " + $3->token_str;
-														$$->next_token = $1;
 													}
 			| expr									{
 														$$ = $1;
@@ -768,31 +809,60 @@ retrnst		:	RETRN expr		{
 
 // 引数の physical_name のリスト と arg 初期値リスト から初期値を代入するTTLコードを作成して返す
 std::string initialize_arg(std::string & function_name, t_token & input_args) {
-	t_token * node = &input_args;
 	std::string ret = "";
 	std::vector<std::string> arg_list = function_manager::get_instance()->select_functionname_to_argument_physicalname_list(function_name);
-	if( (node->token_str=="") || (arg_list.size()==0)){
+	// 引数初期化子を分割
+	std::vector<std::string> init_array = common_utl::split(input_args.token_str, ' ');
+	if(init_array.size() != arg_list.size()){
+		yyerror("[ERROR] The number of arguments and the number of initializers do not match.\n");
+		exit(-1);
+	}
+	if( (input_args.token_str=="") || (arg_list.size()==0)){
 		// 引数指定なし do nothing.
 	} else {
 		// 引数発見！砲撃開始！
-		do {
-			int index = 0;
-			ret += arg_list[index] + "=" + node->token_str + "\n";
-			node = node->next_token;
-		} while(node != NULL);
+		for(int index = 0; index < arg_list.size(); index++){
+			ret += arg_list[index] + "=" + init_array[index] + "\n";
+		}
 	}
 	return ret;
 }
 
 // 戻り値の physical_name のリスト から初期値を代入するTTLコードを作成して返す
 std::string initialize_returnval(std::string & function_name) {
-	std::vector<std::string> arg_array = function_manager::get_instance()->select_functionname_to_returnval_physicalname_list(function_name);
+	std::vector<t_token> ret_array = function_manager::get_instance()->select_functionname_to_returnval_t_token_info_list(function_name);
+	std::vector<std::string> ret_name_array = function_manager::get_instance()->select_functionname_to_returnval_physicalname_list(function_name);
 	std::string ret = "";
-    int arg_cnt = 0;
-	for(std::string x : arg_array){
-		std::cout << "                     ******************************* node:" << x << "\n";
-        ret += variable_manager::convert_name_to_physical(function_name, std::string("arg") + std::to_string(arg_cnt++));
-        ret += "=" + x + "\n";
+    int ret_cnt = 0;
+
+	for(std::string x : ret_name_array){
+
+		// std::cout << "                     ******************************* node:" << x << "\n";
+        // ret += variable_manager::convert_name_to_physical(function_name, std::string("ret") + std::to_string(arg_cnt++));
+        ret += x + "=";
+		switch(ret_array[ret_cnt++].type) {
+			case TYPE_INT:
+				ret += "0\n";
+				break;
+			case TYPE_STRING:
+				ret += "''\n";
+				break;
+			case TYPE_VOID:
+				/* do nothing */
+				break;
+			case TYPE_FUNCTION:
+				/* do nothing */
+				break;
+			case TYPE_INT_ARRAY:
+				/* not impremented */
+				break;
+			case TYPE_STRING_ARRAY:
+				/* not impremented */
+				break;
+			defalt:
+				/* do nothing */
+				break;
+		}
 	}
     return ret;
 }
