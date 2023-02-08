@@ -2,6 +2,7 @@
 #define __VARIABLE_MANAGER__HPP__
 
 #include <string>
+#include <memory>
 #include <map>
 #include "t_token.hpp"
 
@@ -25,7 +26,7 @@ private:
     variable_manager(const variable_manager &src);
 
     // 一次変数配列
-    t_token temp_val_array[C_TTL_ARRAY_MAX];
+    std::shared_ptr<t_token> temp_val_array[C_TTL_ARRAY_MAX];
     // 一次変数配列のインデックス
     uint32_t temp_val_array_index = 0;
 public:
@@ -38,14 +39,14 @@ public:
      */
     static variable_manager *get_instance();
     // シンボルテーブル
-    std::map<std::string, t_token> var_symbol_tbl;
+    std::map<std::string, std::shared_ptr<t_token>> var_symbol_tbl;
 
     // シンボルテーブル操作
-    void    set_physicalname_to_table(const std::string localname, t_token & v);
-    t_token * get_physicalname_from_table(const std::string localname);
+    void    set_physicalname_to_table(const std::string localname, std::shared_ptr<t_token> v);
+    std::shared_ptr<t_token> get_physicalname_from_table(const std::string localname);
     static std::string convert_name_to_physical(std::string function_name, std::string name);
     static std::string convert_name_to_temp(int id);
-    const t_token & lend_temporary_variable();
+    const std::shared_ptr<t_token> lend_temporary_variable();
 
     /***
      * realname     : ローカル変数などを含む実際にコード上に見える名前

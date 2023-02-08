@@ -4,6 +4,7 @@
 #include <string.h>
 #include <string>
 #include <regex>
+#include <memory>
 
 extern FILE * output_file_ptr;
 extern "C" int yylex();
@@ -16,15 +17,15 @@ extern void yyerror(char const*);
 // _b__buf__ ‚Í char *
 #define SET_YYLVAL(_b__buf__)	{																\
 	std::string temp;																			\
-	yylval.ctype = new t_token();																\
-	yylval.ctype->token_str = std::regex_replace(_b__buf__, std::regex("\n|\r\n|\r"), "");		\
+	yylval.ctype->reset( new t_token() );														\
+	(*yylval.ctype)->token_str = std::regex_replace(_b__buf__, std::regex("\n|\r\n|\r"), "");		\
 }
 
 // _b__buf__ ‚Í char *
-#define SET_RETURN_TYPE(_b__type__)	{																\
+#define SET_RETURN_TYPE(_b__type__)	{															\
 	std::string temp;																			\
-	yylval.ctype = new t_token();																\
-	yylval.ctype->type = _b__type__;															\
+	yylval.ctype->reset( new t_token() );														\
+	(*yylval.ctype)->type = _b__type__;															\
 }
 
 %}

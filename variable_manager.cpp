@@ -1,6 +1,7 @@
 #include "variable_manager.hpp"
 #include <string>
 #include <iostream>
+#include <memory>
 #include "common.hpp"
 #include "t_token.hpp"
 
@@ -15,8 +16,8 @@ variable_manager::variable_manager()
 {
     // temporary変数の初期化
     for(int i=0;i<C_TTL_ARRAY_MAX;i++){
-        temp_val_array[i].is_lending = false;
-        temp_val_array[i].physicalname = variable_manager::convert_name_to_temp(i);
+        temp_val_array[i]->is_lending = false;
+        temp_val_array[i]->physicalname = variable_manager::convert_name_to_temp(i);
     }
 }
 
@@ -35,15 +36,15 @@ variable_manager *variable_manager::get_instance()
 }
 
 // localname から physicalnameを登録
-void variable_manager::set_physicalname_to_table(const std::string localname, t_token & v) {
+void variable_manager::set_physicalname_to_table(const std::string localname, std::shared_ptr<t_token> v) {
     // physicalname を作成して登録
-    v.physicalname = variable_manager::convert_name_to_physical(v.parent_function, v.localname);
+    v->physicalname = variable_manager::convert_name_to_physical(v->parent_function, v->localname);
     var_symbol_tbl[localname] = v;
 }
 
 // localname から physicalnameのデータ型を取得
-t_token * variable_manager::get_physicalname_from_table(const std::string localname) {
-    return & var_symbol_tbl[localname];
+std::shared_ptr<t_token> variable_manager::get_physicalname_from_table(const std::string localname) {
+    return var_symbol_tbl[localname];
 }
 
 // トークン名を localname から physicalname に変更する
@@ -65,16 +66,16 @@ std::string variable_manager::convert_name_to_temp(int id) {
     return ret;
 }
 // 一次変数を 貸し出す
-const t_token & variable_manager::lend_temporary_variable(){
+const std::shared_ptr<t_token> variable_manager::lend_temporary_variable(){
     // Todo: 未使用の一次変数がない場合にエラーとする処理を追加する
     if(temp_val_array_index==C_TTL_ARRAY_MAX) {
         temp_val_array_index = 0;
     }
     // 未使用の変数を探して貸出処理
-    while(temp_val_array[temp_val_array_index].is_lending) {
+    while(temp_val_array[temp_val_array_index]->is_lending) {
         temp_val_array_index++;
     }
-    temp_val_array[temp_val_array_index].is_lending = true;
+    temp_val_array[temp_val_array_index]->is_lending = true;
     return temp_val_array[temp_val_array_index++];
 }
 void variable_manager::return_temporary_variable(t_token &v){

@@ -4,6 +4,7 @@
 #include <sstream>
 #include <iomanip>
 #include <map>
+#include <memory>
 #include "variable_manager.hpp"
 
 	extern "C" void yyerror(const char* s);
@@ -24,15 +25,15 @@
 	}
 
 	// 登録済みの変数を取得する
-	t_token t_token::get_local_name(std::string name) {
-		t_token ret = *function_manager::get_instance()->select_realname_to_t_token(
+	std::shared_ptr< t_token > t_token::get_local_name(std::string name) {
+		std::shared_ptr< t_token > ret = function_manager::get_instance()->select_realname_to_t_token(
 				function_manager::get_instance()->get_function_name(),
 				name);
 		printf("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n");
 		printf("name:%s\n", name.c_str());
 		printf("funcname:%s\n", function_manager::get_instance()->get_function_name().c_str());
-		printf("ret->token_str:%s\n", ret.token_str.c_str());
-		printf("ret->type:%d\n", ret.type);
+		printf("ret->token_str:%s\n", ret->token_str.c_str());
+		printf("ret->type:%d\n", ret->type);
 		printf("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n");
 		return ret;
 	}
@@ -61,9 +62,9 @@
 	そのために t_token に preamble_str（前置き文）っつうメンバを作った。
 	*/
 	// というわけで、t_token ２つを結合して 前置き文をもっている t_token を生成する関数
-	t_token* t_token::string_concatenation(const t_token& t1, const t_token& t2) {
-		t_token * ret = new t_token();
-		const t_token &temp = variable_manager::get_instance()->lend_temporary_variable();
+	std::shared_ptr< t_token > t_token::string_concatenation(const t_token& t1, const t_token& t2) {
+		std::shared_ptr< t_token > ret( new t_token() );
+		const std::shared_ptr<t_token> temp = variable_manager::get_instance()->lend_temporary_variable();
 
 		ret->preamble_str = t1.preamble_str + "\n" + t2.preamble_str;
 		if( (t1.type == TYPE_STRING) && (t2.type == TYPE_STRING) ) {
@@ -75,8 +76,8 @@
 		} else {
 			yyerror("[ERROR] Internal error. string concatenation type missmatch.\n");
 		}
-		ret->preamble_str += temp.physicalname + "=inputstr\n";
-		ret->token_str = temp.physicalname;
+		ret->preamble_str += temp->physicalname + "=inputstr\n";
+		ret->token_str = temp->physicalname;
 		ret->type = TYPE_STRING;
 		std::cout << "preamble:" << ret->preamble_str << "\n";
 		std::cout << "token_str:" << ret->token_str << "\n";

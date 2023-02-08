@@ -1,6 +1,7 @@
 #ifndef __T_TOKEN_HPP_
 #define __T_TOKEN_HPP_
 #include <string>
+#include <memory>
 
 typedef enum {
 	TYPE_INT=0,
@@ -13,7 +14,7 @@ typedef enum {
 
 class t_token {
 public:
-	t_token * next_token;			// funciton_info の argument_table/return_val_table に t_token * のリストを代入するための線形リスト用ポインタ
+	std::shared_ptr<t_token> next_token;			// funciton_info の argument_table/return_val_table に t_token * のリストを代入するための線形リスト用ポインタ
 	t_token();
 	t_token(const t_token &t);
 	std::string token_str;
@@ -28,13 +29,13 @@ public:
     std::string realname;
     std::string localname;
     std::string physicalname;
-    t_token * synbol_info;
+    std::shared_ptr<t_token> synbol_info;
     bool is_lending;
 	//  +演算子のオーバーロード
 	t_token operator+(const t_token& t2);
 	// callst(関数呼び出し) の引数など
-	static t_token get_local_name(std::string name);
-	static t_token* string_concatenation(const t_token& t1, const t_token& t2);
+	static std::shared_ptr< t_token > get_local_name(std::string name);
+	static std::shared_ptr< t_token > string_concatenation(const t_token& t1, const t_token& t2);
 };
 
 #endif // __T_TOKEN_HPP_

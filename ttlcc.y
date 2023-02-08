@@ -5,6 +5,7 @@
 #include <string>
 #include <iostream>
 #include <map>
+#include <memory>
 #include <regex>
 #include "parser.hpp"
 #include "function.hpp"
@@ -41,7 +42,7 @@ void breakp(t_token & t){
 
 %union {
 	int		itype;
-	t_token	* ctype;
+	std::shared_ptr<t_token> *ctype;
 }
 
 %defines
@@ -75,149 +76,149 @@ void breakp(t_token & t){
 
 /* プログラムとはなんぞや */
 program		:	program functionst codes ENDFUNCTION	{
-															$$ = new t_token( *$2 + *$3); 
-															$$->token_str += "return\n";
-															output_to_file($$->token_str);
+															(*$$).reset( new t_token( *(*$2) + *(*$3)) ); 
+															(*$$)->token_str += "return\n";
+															output_to_file((*$$)->token_str);
 														}
-			|	program prototypest						{$$ = new t_token();}
+			|	program prototypest						{(*$$).reset( new t_token());}
 			|	functionst codes ENDFUNCTION			{
-															$$ = new t_token(*$1 + *$2); 
-															$$->token_str += "return\n";
-															output_to_file($$->token_str);
+															(*$$).reset( new t_token(*(*$1) + *(*$2))); 
+															(*$$)->token_str += "return\n";
+															output_to_file((*$$)->token_str);
 														}
-			|	prototypest								{$$ = new t_token();}
+			|	prototypest								{(*$$).reset( new t_token());}
 			;
 
 functionnamest	:	TOKEN						{ 
 													// 関数ここから
 													// プロトタイプ宣言で使用するときも結局 args の登録とかで get_function_name を使用するのでここで登録したほうが良い
 													// どっちにしろ、関数定義の先頭で違う名前に上書き登録する
-													$1->type = TYPE_FUNCTION;
-													function_manager::get_instance()->set_function_name($1->token_str);
-													$$ = $1;
+													(*$1)->type = TYPE_FUNCTION;
+													function_manager::get_instance()->set_function_name((*$1)->token_str);
+													(*$$) = (*$1);
 												}
 
 /* 関数とはなんぞや */
 functionst	:	FUNCTION return_types functionnamest BRACE args END_BRACE {
-														$$ = new t_token();
-														std::cout << "return_types:" << $2->token_str << "\n";
-														std::cout << "TOKEN:" << $3->token_str << "\n";
-														std::cout << "args:" << $5->token_str << "\n";
+														(*$$).reset( new t_token());
+														std::cout << "return_types:" << (*$2)->token_str << "\n";
+														std::cout << "TOKEN:" << (*$3)->token_str << "\n";
+														std::cout << "args:" << (*$5)->token_str << "\n";
 														// 引数リストを作成
 														int ret_cnt = 0;
-														std::vector<t_token> input_list;
-														t_token * tmp_token_ptr = $5;
-														breakp(*$5);
-														std::vector<std::string> initialize_list = common_utl::split($5->token_str, ',');
+														std::vector<std::shared_ptr<t_token>> input_list;
+														std::shared_ptr<t_token> tmp_token_ptr = (*$5);
+														breakp(*(*$5));
+														std::vector<std::string> initialize_list = common_utl::split((*$5)->token_str, ',');
 														while(tmp_token_ptr!=NULL){
 															if(initialize_list.size()!=0){
 																// std::cout << "initialize_list[ret_cnt++]:" << initialize_list[ret_cnt] << "\n";
 																// std::cout << "common_utl::split( initialize_list[ret_cnt++], ' ')[1]:" << common_utl::split( initialize_list[ret_cnt++], ' ')[1] << "\n";
 																tmp_token_ptr->token_str = common_utl::split( initialize_list[ret_cnt++], ' ')[1];
 															}
-															input_list.push_back(*tmp_token_ptr);
+															input_list.push_back(tmp_token_ptr);
 															tmp_token_ptr = tmp_token_ptr->next_token;
 														}
 
 														// 戻り値リストを作成
-														std::vector<t_token> retrn_list;
-														tmp_token_ptr = $2;
+														std::vector<std::shared_ptr<t_token>> retrn_list;
+														tmp_token_ptr = (*$2);
 														while(tmp_token_ptr!=NULL){
-															retrn_list.push_back(*tmp_token_ptr);
+															retrn_list.push_back(tmp_token_ptr);
 															tmp_token_ptr = tmp_token_ptr->next_token;
 														}
 
 														// 関数情報を登録
-														function_manager::get_instance()->set_function_info($3->token_str, input_list, retrn_list, false);
+														function_manager::get_instance()->set_function_info((*$3)->token_str, input_list, retrn_list, false);
 														// ラベルを生成
-														$$->token_str = std::string(
-																					":" + $3->token_str + "\n"
+														(*$$)->token_str = std::string(
+																					":" + (*$3)->token_str + "\n"
 														);
 
-														$$->type = TYPE_FUNCTION;
-														$$->realname = $3->token_str;	// 関数名はrealnameに保持
+														(*$$)->type = TYPE_FUNCTION;
+														(*$$)->realname = (*$3)->token_str;	// 関数名はrealnameに保持
 													}
 			;
 
 prototypest	:	EXTERN FUNCTION return_types functionnamest BRACE args END_BRACE {
 														// 引数リストを作成
-														std::vector<t_token> input_list;
-														t_token * tmp_token_ptr = $6;
-														while(tmp_token_ptr!=NULL){
-															input_list.push_back(*tmp_token_ptr);
+														std::vector<std::shared_ptr<t_token>> input_list;
+														std::shared_ptr<t_token> tmp_token_ptr = (*$6);
+														while(tmp_token_ptr){
+															input_list.push_back(tmp_token_ptr);
 															tmp_token_ptr = tmp_token_ptr->next_token;
 														}
 														// 戻り値リストを作成
-														std::vector<t_token> retrn_list;
-														tmp_token_ptr = $3;
-														while(tmp_token_ptr!=NULL){
-															retrn_list.push_back(*tmp_token_ptr);
+														std::vector<std::shared_ptr<t_token>> retrn_list;
+														tmp_token_ptr = (*$3);
+														while(tmp_token_ptr){
+															retrn_list.push_back(tmp_token_ptr);
 															tmp_token_ptr = tmp_token_ptr->next_token;
 														}
 														// 関数情報を登録（TTLマクロ的には特にすることはない）
-														function_manager::get_instance()->set_function_info($4->token_str, input_list, retrn_list, true);
+														function_manager::get_instance()->set_function_info((*$4)->token_str, input_list, retrn_list, true);
 												}
 
 return_types:	return_types typest				{
-													$$ = new t_token(*$1);
-													$$->token_str = $1->token_str + " " + $2->token_str;
-													$$->type = $2->type;
-													$$->next_token = $1;
+													(*$$).reset( new t_token(*(*$1)));
+													(*$$)->token_str = (*$1)->token_str + " " + (*$2)->token_str;
+													(*$$)->type = (*$2)->type;
+													(*$$)->next_token = (*$1);
 												}
-			|	typest							{ $$ = $1; }
+			|	typest							{ (*$$) = (*$1); }
 			;
 
 typest		:	INT								{
-													$$ = new t_token();
-													$$->token_str = "int";
-													$$->type = TYPE_INT;
+													(*$$).reset( new t_token() );
+													(*$$)->token_str = "int";
+													(*$$)->type = TYPE_INT;
 												}
 			|	STRING							{
-													$$ = new t_token();
-													$$->token_str = "string";
-													$$->type = TYPE_STRING;
+													(*$$).reset( new t_token() );
+													(*$$)->token_str = "string";
+													(*$$)->type = TYPE_STRING;
 												}
-			|	VOID							{ $$ = $1; }
+			|	VOID							{ (*$$) = (*$1); }
 			;
 
 initialize_intval_st	:	initialize_intval_st COMMA INT_RETERAL	{
-																		$$ = new t_token();
-																		$$->token_str = $1->token_str + " " + $3->token_str;
+																		(*$$).reset( new t_token() );
+																		(*$$)->token_str = (*$1)->token_str + " " + (*$3)->token_str;
 																	}
-						|	INT_RETERAL								{ $$ = $1; }
+						|	INT_RETERAL								{ (*$$) = (*$1); }
 						;
 
 initialize_strval_st	:	initialize_strval_st COMMA STR_RETERAL	{
-																		$$ = new t_token();
-																		$$->token_str = $1->token_str + " " + $3->token_str;
+																		(*$$).reset( new t_token() );
+																		(*$$)->token_str = (*$1)->token_str + " " + (*$3)->token_str;
 																	}
-						|	STR_RETERAL								{ $$ = $1; }
+						|	STR_RETERAL								{ (*$$) = (*$1); }
 						;
 
 var			:	typest TOKEN					{
-													$$ = new t_token(*$2);
-													$$->type = $1->type;
-													printf(" ===================================================================== $1->type;=%d\n", $1->type);
+													(*$$).reset( new t_token(*(*$2)) );
+													(*$$)->type = (*$1)->type;
+													printf(" ===================================================================== (*$1)->type;=%d\n", (*$1)->type);
 													// 変数名の設定
 													function_manager::get_instance()->set_localname_and_realname(
 														function_manager::get_instance()->get_function_name(),
-														$2->token_str,
-														*$$,
+														(*$2)->token_str,
+														(*$$),
 														E_KIND_VARIABLE
 													);
 													// 実際に使用する変数は physicalname なので、 token_str には physicalnameを代入しておく
-													$$->token_str = function_manager::get_instance()->select_realname_to_physicalname(
+													(*$$)->token_str = function_manager::get_instance()->select_realname_to_physicalname(
 															function_manager::get_instance()->get_function_name(),
-															$2->token_str
+															(*$2)->token_str
 													);
-													switch($1->type){
+													switch((*$1)->type){
 														case TYPE_STRING:
 															// string型変数を初期化
-															$$->token_str = $$->token_str + "=''\n";
+															(*$$)->token_str = (*$$)->token_str + "=''\n";
 															break;
 														case TYPE_INT:
 															// int型変数を初期化
-															$$->token_str = $$->token_str + "=0\n";
+															(*$$)->token_str = (*$$)->token_str + "=0\n";
 															break;
 														case TYPE_VOID:
 														default:
@@ -226,28 +227,28 @@ var			:	typest TOKEN					{
 													}
 												}
 			|	typest TOKEN EQUAL INT_RETERAL	{
-													$$ = new t_token(*$2);
-													$$->type = $1->type;
+													(*$$).reset( new t_token(*(*$2)) );
+													(*$$)->type = (*$1)->type;
 													// ローカル変数名の設定
 													function_manager::get_instance()->set_localname_and_realname(
 														function_manager::get_instance()->get_function_name(),
-														$2->token_str,
-														*$$,
+														(*$2)->token_str,
+														(*$$),
 														E_KIND_VARIABLE
 													);
 													// 実際に使用する変数は physicalname なので、 token_str には physicalnameを代入しておく
-													$$->token_str = function_manager::get_instance()->select_realname_to_physicalname(
+													(*$$)->token_str = function_manager::get_instance()->select_realname_to_physicalname(
 															function_manager::get_instance()->get_function_name(),
-															$2->token_str
+															(*$2)->token_str
 													);
-													switch($1->type){
+													switch((*$1)->type){
 														case TYPE_STRING:
 															// 暗黙型キャストを経ての string型変数初期化
-															$$->token_str = $$->token_str + "='" + $4->token_str + "'\n";
+															(*$$)->token_str = (*$$)->token_str + "='" + (*$4)->token_str + "'\n";
 															break;
 														case TYPE_INT:
 															// int型変数を初期化
-															$$->token_str = $$->token_str + "=" + $4->token_str.c_str() + "\n";
+															(*$$)->token_str = (*$$)->token_str + "=" + (*$4)->token_str.c_str() + "\n";
 															break;
 														case TYPE_VOID:
 														default:
@@ -257,111 +258,111 @@ var			:	typest TOKEN					{
 												}
 			// 整数配列（初期化なし）
 			|	INT TOKEN LEFT_INDEX_BRACKET INT_RETERAL RIGHT_INDEX_BRACKET	{
-													$$ = new t_token(*$2);
-													$$->type = TYPE_INT_ARRAY;
+													(*$$).reset( new t_token(*(*$2)) );
+													(*$$)->type = TYPE_INT_ARRAY;
 													// ローカル変数名の設定
 													function_manager::get_instance()->set_localname_and_realname(
 														function_manager::get_instance()->get_function_name(),
-														$2->token_str,
-														*$$,
+														(*$2)->token_str,
+														(*$$),
 														E_KIND_VARIABLE
 													);
 													// 実際に使用する変数は physicalname なので、 token_str には physicalnameを代入しておく
-													$$->token_str = function_manager::get_instance()->select_realname_to_physicalname(
+													(*$$)->token_str = function_manager::get_instance()->select_realname_to_physicalname(
 															function_manager::get_instance()->get_function_name(),
-															$2->token_str
+															(*$2)->token_str
 													);
-													$$->token_str = "intdim " + $$->token_str + " " + $5->token_str + "\n";
+													(*$$)->token_str = "intdim " + (*$$)->token_str + " " + (*$5)->token_str + "\n";
 												}
 			// 文字列配列（初期化なし）
 			|	STRING TOKEN LEFT_INDEX_BRACKET INT_RETERAL RIGHT_INDEX_BRACKET	{
-													$$ = new t_token(*$2);
-													$$->type = TYPE_STRING_ARRAY;
+													(*$$).reset( new t_token(*(*$2)) );
+													(*$$)->type = TYPE_STRING_ARRAY;
 													// ローカル変数名の設定
 													function_manager::get_instance()->set_localname_and_realname(
 														function_manager::get_instance()->get_function_name(),
-														$2->token_str,
-														*$$,
+														(*$2)->token_str,
+														(*$$),
 														E_KIND_VARIABLE
 													);
 													// 実際に使用する変数は physicalname なので、 token_str には physicalnameを代入しておく
-													$$->token_str = function_manager::get_instance()->select_realname_to_physicalname(
+													(*$$)->token_str = function_manager::get_instance()->select_realname_to_physicalname(
 															function_manager::get_instance()->get_function_name(),
-															$2->token_str
+															(*$2)->token_str
 													);
-													$$->token_str = "strdim " + $$->token_str + " " + $5->token_str + "\n";
+													(*$$)->token_str = "strdim " + (*$$)->token_str + " " + (*$5)->token_str + "\n";
 												}
 			// 整数配列（初期化あり）
 			|	INT TOKEN LEFT_INDEX_BRACKET INT_RETERAL RIGHT_INDEX_BRACKET EQUAL LEFT_INDEX_BRACKET initialize_intval_st RIGHT_INDEX_BRACKET {
-													std::vector<std::string> initialize_list = common_utl::split($8->token_str, ' ');
-													$$ = new t_token(*$2);
-													$$->type = TYPE_INT_ARRAY;
+													std::vector<std::string> initialize_list = common_utl::split((*$8)->token_str, ' ');
+													(*$$).reset( new t_token(*(*$2)) );
+													(*$$)->type = TYPE_INT_ARRAY;
 													// ローカル変数名の設定
 													function_manager::get_instance()->set_localname_and_realname(
 														function_manager::get_instance()->get_function_name(),
-														$2->token_str,
-														*$$,
+														(*$2)->token_str,
+														(*$$),
 														E_KIND_VARIABLE
 													);
 													// 実際に使用する変数は physicalname なので、 token_str には physicalnameを代入しておく
-													$$->token_str = function_manager::get_instance()->select_realname_to_physicalname(
+													(*$$)->token_str = function_manager::get_instance()->select_realname_to_physicalname(
 															function_manager::get_instance()->get_function_name(),
-															$2->token_str
+															(*$2)->token_str
 													);
-													std::string local_name = $$->token_str;
-													$$->token_str = "intdim " + local_name + " " + $5->token_str + "\n";
+													std::string local_name = (*$$)->token_str;
+													(*$$)->token_str = "intdim " + local_name + " " + (*$5)->token_str + "\n";
 													// 初期化処理の追加
 													int i=0;
 													for(std::string x : initialize_list){
-														$$->token_str += local_name + "[" + std::to_string(i) + "]=" + x + "\n";
+														(*$$)->token_str += local_name + "[" + std::to_string(i) + "]=" + x + "\n";
 														i++;
 													}
 												}
 			// 文字列配列（初期化あり）
 			|	STRING TOKEN LEFT_INDEX_BRACKET INT_RETERAL RIGHT_INDEX_BRACKET EQUAL LEFT_INDEX_BRACKET initialize_strval_st RIGHT_INDEX_BRACKET	{
-													std::vector<std::string> initialize_list = common_utl::split($8->token_str, ' ');
-													$$ = new t_token(*$2);
-													$$->type = TYPE_INT_ARRAY;
+													std::vector<std::string> initialize_list = common_utl::split((*$8)->token_str, ' ');
+													(*$$).reset( new t_token(*(*$2)) );
+													(*$$)->type = TYPE_INT_ARRAY;
 													// ローカル変数名の設定
 													function_manager::get_instance()->set_localname_and_realname(
 														function_manager::get_instance()->get_function_name(),
-														$2->token_str,
-														*$$,
+														(*$2)->token_str,
+														(*$$),
 														E_KIND_VARIABLE
 													);
 													// 実際に使用する変数は physicalname なので、 token_str には physicalnameを代入しておく
-													$$->token_str = function_manager::get_instance()->select_realname_to_physicalname(
+													(*$$)->token_str = function_manager::get_instance()->select_realname_to_physicalname(
 															function_manager::get_instance()->get_function_name(),
-															$2->token_str
+															(*$2)->token_str
 													);
-													std::string local_name = $$->token_str;
-													$$->token_str = "strdim " + local_name + " " + $5->token_str + "\n";
+													std::string local_name = (*$$)->token_str;
+													(*$$)->token_str = "strdim " + local_name + " " + (*$5)->token_str + "\n";
 													// 初期化処理の追加
 													int i=0;
 													for(std::string x : initialize_list){
-														$$->token_str += local_name + "[" + std::to_string(i) + "]=" + x + "\n";
+														(*$$)->token_str += local_name + "[" + std::to_string(i) + "]=" + x + "\n";
 														i++;
 													}
 												}
 			|	typest TOKEN EQUAL STR_RETERAL	{
-													$$ = new t_token(*$2);
-													$$->type = $1->type;
+													(*$$).reset( new t_token(*(*$2)) );
+													(*$$)->type = (*$1)->type;
 													// ローカル変数名の設定
 													function_manager::get_instance()->set_localname_and_realname(
 														function_manager::get_instance()->get_function_name(),
-														$2->token_str,
-														*$$,
+														(*$2)->token_str,
+														(*$$),
 														E_KIND_VARIABLE
 													);
 													// 実際に使用する変数は physicalname なので、 token_str には physicalnameを代入しておく
-													$$->token_str = function_manager::get_instance()->select_realname_to_physicalname(
+													(*$$)->token_str = function_manager::get_instance()->select_realname_to_physicalname(
 															function_manager::get_instance()->get_function_name(),
-															$2->token_str
+															(*$2)->token_str
 													);
-													switch($1->type){
+													switch((*$1)->type){
 														case TYPE_STRING:
 															// string型変数を初期化
-															$$->token_str = $$->token_str + "=" + $4->token_str + "\n";
+															(*$$)->token_str = (*$$)->token_str + "=" + (*$4)->token_str + "\n";
 															break;
 														case TYPE_INT:
 															// 文字列型→整数型の暗黙の型キャストは行われない
@@ -373,262 +374,279 @@ var			:	typest TOKEN					{
 															break;
 													}
 												}
-			|	VOID							{ $$ = $1; $$->token_str = ""; }
+			|	VOID							{ (*$$) = (*$1); (*$$)->token_str = ""; }
 			;
 
 args		:	args COMMA typest TOKEN			{
-													$$ = new t_token(*$1);
-													$$->token_str = $1->token_str + "," + $3->token_str + " " + $4->token_str;
-													$$->type = $3->type;
-													$$->next_token = $1;
+													(*$$).reset( new t_token(*(*$1)) );
+													(*$$)->token_str = (*$1)->token_str + "," + (*$3)->token_str + " " + (*$4)->token_str;
+													(*$$)->type = (*$3)->type;
+													(*$$)->next_token = (*$1);
 												}
 			|	typest TOKEN					{ 
-													$$ = new t_token();
-													$$->token_str = $1->token_str + " " + $2->token_str;
-													$$->type = $1->type;
-													$$->next_token = NULL;
+													(*$$).reset( new t_token() );
+													(*$$)->token_str = (*$1)->token_str + " " + (*$2)->token_str;
+													(*$$)->type = (*$1)->type;
+													(*$$)->next_token = NULL;
 												}
 			|	VOID							{
-													$$ = new t_token();
-													$$->token_str = "";
-													$$->type = TYPE_VOID;
-													$$->next_token = NULL;
+													(*$$).reset( new t_token() );
+													(*$$)->token_str = "";
+													(*$$)->type = TYPE_VOID;
+													(*$$)->next_token = NULL;
 												}
 			;
 
-codes		:	var CR							{ $$ = $1; $$->token_str += "\n"; }
-			|	callst CR						{ $$ = $1; $$->token_str += "\n"; }
+codes		:	var CR							{ (*$$) = (*$1); (*$$)->token_str += "\n"; }
+			|	callst CR						{ (*$$) = (*$1); (*$$)->token_str += "\n"; }
 			| 	array_reteral EQUAL callst CR	{
 													int ret_num = 0;
-													$$ = new t_token();
+													(*$$).reset( new t_token() );
 													std::vector<std::string> ret_name_array = function_manager::get_instance()->
-																								select_functionname_to_returnval_physicalname_list($3->realname);	// 関数名は callst の realname に保持されている
+																								select_functionname_to_returnval_physicalname_list((*$3)->realname);	// 関数名は callst の realname に保持されている
 													// 関数コール
-													$$->token_str = $3->token_str + "\n";
+													(*$$)->token_str = (*$3)->token_str + "\n";
 													// 結果を改修
-													std::vector<std::string> dest_list = common_utl::split($1->token_str, ' ');
+													std::vector<std::string> dest_list = common_utl::split((*$1)->token_str, ' ');
 													for(std::string ret_name : ret_name_array) {
-														 $$->token_str += dest_list[ret_num++] + "=" + ret_name + "\n";
+														 (*$$)->token_str += dest_list[ret_num++] + "=" + ret_name + "\n";
 													}
 												}
-			|	ifst							{ $$ = $1; $$->token_str += "\n"; }
-			|	forst							{ $$ = $1; $$->token_str += "\n"; }
-			|	dowhilest						{ $$ = $1; $$->token_str += "\n"; }
-			|	BREAK CR						{ $$ = new t_token(); $$->token_str = "break\n"; }
-			|	CONTINUE CR						{ $$ = new t_token(); $$->token_str = "continue\n";	}
-			|	retrnst CR						{ $$ = $1; $$->token_str += "\n"; }
-			|	expr CR							{ $$ = $1; $$->token_str += "\n"; }
-			|	codes var CR					{ $$ = new t_token(*$1 + *$2); $$->token_str += "\n"; }
-			|	codes callst CR					{ $$ = new t_token(*$1 + *$2); $$->token_str += "\n"; }
+			|	ifst							{ (*$$) = (*$1); (*$$)->token_str += "\n"; }
+			|	forst							{ (*$$) = (*$1); (*$$)->token_str += "\n"; }
+			|	dowhilest						{ (*$$) = (*$1); (*$$)->token_str += "\n"; }
+			|	BREAK CR						{ (*$$).reset( new t_token()) ; (*$$)->token_str = "break\n" ; }
+			|	CONTINUE CR						{ (*$$).reset( new t_token()) ; (*$$)->token_str = "continue\n" ;	}
+			|	retrnst CR						{ (*$$) = (*$1); (*$$)->token_str += "\n"; }
+			|	expr CR							{ (*$$) = (*$1); (*$$)->token_str += "\n"; }
+			|	codes var CR					{ (*$$).reset( new t_token(*(*$1) + *(*$2))); (*$$)->token_str += "\n" ; }
+			|	codes callst CR					{ (*$$).reset( new t_token(*(*$1) + *(*$2))); (*$$)->token_str += "\n" ; }
 			| 	codes array_reteral EQUAL callst CR	{
 														int ret_num = 0;
-														$$ = new t_token();
+														(*$$).reset( new t_token() );
 														std::vector<std::string> ret_name_array = function_manager::get_instance()->
-																									select_functionname_to_returnval_physicalname_list($4->realname);	// 関数名は callst の realname に保持されている
+																									select_functionname_to_returnval_physicalname_list((*$4)->realname);	// 関数名は callst の realname に保持されている
 														// 関数コール
-														$$->token_str = $1->token_str + $4->token_str +"\n";
+														(*$$)->token_str = (*$1)->token_str + (*$4)->token_str +"\n";
 														// 結果を改修
-														std::vector<std::string> dest_list = common_utl::split($2->token_str, ' ');
+														std::vector<std::string> dest_list = common_utl::split((*$2)->token_str, ' ');
 														for(std::string ret_name : ret_name_array) {
-															$$->token_str += dest_list[ret_num++] + "=" + ret_name + "\n";
+															(*$$)->token_str += dest_list[ret_num++] + "=" + ret_name + "\n";
 														}
 													}
-			|	codes ifst						{ $$ = new t_token(*$1 + *$2); $$->token_str += "\n"; }
-			|	codes forst						{ $$ = new t_token(*$1 + *$2); $$->token_str += "\n"; }
-			|	codes dowhilest					{ $$ = new t_token(*$1 + *$2); $$->token_str += "\n"; }
-			|	codes BREAK CR					{ $$ = new t_token(*$1); $$->token_str = "break\n"; }
-			|	codes CONTINUE CR				{ $$ = new t_token(*$1); $$->token_str = "continue\n";	}
-			|	codes retrnst CR				{ $$ = new t_token(*$1 + *$2); $$->token_str += "\n"; }
-			|	codes expr CR					{ $$ = new t_token(*$1 + *$2); $$->token_str += "\n"; }
+			|	codes ifst						{ (*$$).reset( new t_token(*(*$1) + *(*$2))) ; (*$$)->token_str += "\n"; }
+			|	codes forst						{ (*$$).reset( new t_token(*(*$1) + *(*$2))) ; (*$$)->token_str += "\n"; }
+			|	codes dowhilest					{ (*$$).reset( new t_token(*(*$1) + *(*$2))) ; (*$$)->token_str += "\n"; }
+			|	codes BREAK CR					{ (*$$).reset( new t_token(*(*$1))) ; (*$$)->token_str = "break\n"; }
+			|	codes CONTINUE CR				{ (*$$).reset( new t_token(*(*$1))) ; (*$$)->token_str = "continue\n";	}
+			|	codes retrnst CR				{ (*$$).reset( new t_token(*(*$1) + *(*$2))); (*$$)->token_str += "\n"; }
+			|	codes expr CR					{ (*$$).reset( new t_token(*(*$1) + *(*$2))); (*$$)->token_str += "\n"; }
 			;
 
 accessable_var	:	TOKEN												{
-																			$$ = new t_token(
+																			(*$$).reset( new t_token(
 																				*(function_manager::get_instance()->select_realname_to_t_token(
 																					function_manager::get_instance()->get_function_name(),
-																					$1->token_str
+																					(*$1)->token_str
 																				) )
+																			)
 																			);
 																			// 実際に使用する変数は physicalname なので、 token_str には physicalnameを代入しておく
-																			$$->token_str = function_manager::get_instance()->select_realname_to_physicalname(
+																			(*$$)->token_str = function_manager::get_instance()->select_realname_to_physicalname(
 																					function_manager::get_instance()->get_function_name(),
-																					$1->token_str
+																					(*$1)->token_str
 																			);
 																		}
 				|	TOKEN LEFT_INDEX_BRACKET expr RIGHT_INDEX_BRACKET	{
-																			$$ = new t_token(
+																			(*$$).reset( new t_token(
 																				*(function_manager::get_instance()->select_realname_to_t_token (
 																					function_manager::get_instance()->get_function_name(),
-																					$1->token_str
+																					(*$1)->token_str
 																				) )
+																			)
 																			);
 																			// 実際に使用する変数は physicalname なので、 token_str には physicalnameを代入しておく
-																			$$->token_str = function_manager::get_instance()->select_realname_to_physicalname(
+																			(*$$)->token_str = function_manager::get_instance()->select_realname_to_physicalname(
 																					function_manager::get_instance()->get_function_name(),
-																					$1->token_str
+																					(*$1)->token_str
 																			);
-																			$$->token_str += "[" + $3->token_str + "]";
+																			(*$$)->token_str += "[" + (*$3)->token_str + "]";
 																		}
 				;
 
 return_vars	: return_vars COMMA accessable_var							{
-																			$$ = new t_token();
-																			$$->token_str = $1->token_str + " " + $3->token_str;
+																			(*$$).reset( new t_token() );
+																			(*$$)->token_str = (*$1)->token_str + " " + (*$3)->token_str;
 																		}
-			| accessable_var											{ $$ = $1; }
+			| accessable_var											{ (*$$) = (*$1); }
 			;
 
-array_reteral	: LEFT_INDEX_BRACKET return_vars RIGHT_INDEX_BRACKET 	{ $$ = $2; }
+array_reteral	: LEFT_INDEX_BRACKET return_vars RIGHT_INDEX_BRACKET 	{ (*$$) = (*$2); }
 				;
 
-expr		: INT_RETERAL						{ $$ = $1; $$->type = TYPE_INT; }
-			| STR_RETERAL						{ $$ = $1; $$->type = TYPE_STRING; }
-			| MINUS_INT_RETERAL					{ $$ = $1; $$->type = TYPE_INT; }
-			| BRACE expr END_BRACE				{ $$ = new t_token(*$2); $$->token_str = "(" + $2->token_str + ")"; }
+expr		: INT_RETERAL						{ (*$$) = (*$1); (*$$)->type = TYPE_INT; }
+			| STR_RETERAL						{ (*$$) = (*$1); (*$$)->type = TYPE_STRING; }
+			| MINUS_INT_RETERAL					{ (*$$) = (*$1); (*$$)->type = TYPE_INT; }
+			| BRACE expr END_BRACE				{ (*$$).reset( new t_token(*(*$2))); (*$$)->token_str = "(" + (*$2)->token_str + ")"; }
 			| expr PLUS expr					{ 
-													if( ($1->type == TYPE_STRING) || ($3->type == TYPE_STRING) ){
+													if( ((*$1)->type == TYPE_STRING) || ((*$3)->type == TYPE_STRING) ){
 														// どちらかが文字列型なら文字列結合
-														$$ = t_token::string_concatenation(*$1, *$3);
+														(*$$) = t_token::string_concatenation(*(*$1), *(*$3));
 													} else {
 														// そうでなければ数値加算
-														$$ = new t_token();
-														$$->type = TYPE_INT;
-														$$->token_str = $1->token_str + "+" + $3->token_str;
+														(*$$).reset( new t_token() );
+														(*$$)->type = TYPE_INT;
+														(*$$)->token_str = (*$1)->token_str + "+" + (*$3)->token_str;
 													}
 												}
 			| expr MINUS expr					{
-													if( ($1->type == TYPE_STRING) || ($2->type == TYPE_STRING) ) {
+													if( ((*$1)->type == TYPE_STRING) || ((*$2)->type == TYPE_STRING) ) {
 														yyerror("[ERROR] Can not do this kind of math with strings.\n");
 													}
-													$$ = new t_token(); $$->token_str = $1->token_str + "-" + $3->token_str;
+													(*$$).reset( new t_token());
+													(*$$)->token_str = (*$1)->token_str + "-" + (*$3)->token_str;
 												}
 			| expr ASTA expr					{
-													if( ($1->type == TYPE_STRING) || ($2->type == TYPE_STRING) ) {
+													if( ((*$1)->type == TYPE_STRING) || ((*$2)->type == TYPE_STRING) ) {
 														yyerror("[ERROR] Can not do this kind of math with strings.\n");
 													}
-													$$ = new t_token(); $$->token_str = $1->token_str + "*" + $3->token_str;
+													(*$$).reset( new t_token()); 
+													(*$$)->token_str = (*$1)->token_str + "*" + (*$3)->token_str;
 												}
 			| expr SLASH expr					{
-													if( ($1->type == TYPE_STRING) || ($2->type == TYPE_STRING) ) {
+													if( ((*$1)->type == TYPE_STRING) || ((*$2)->type == TYPE_STRING) ) {
 														yyerror("[ERROR] Can not do this kind of math with strings.\n");
 													}
-													$$ = new t_token(); $$->token_str = $1->token_str + "/" + $3->token_str;
+													(*$$).reset( new t_token()); 
+													(*$$)->token_str = (*$1)->token_str + "/" + (*$3)->token_str;
 												}
 			| expr MOD expr						{
-													if( ($1->type == TYPE_STRING) || ($2->type == TYPE_STRING) ) {
+													if( ((*$1)->type == TYPE_STRING) || ((*$2)->type == TYPE_STRING) ) {
 														yyerror("[ERROR] Can not do this kind of math with strings.\n");
 													}
-													$$ = new t_token(); $$->token_str = $1->token_str + "%" + $3->token_str;
+													(*$$).reset( new t_token()); 
+													(*$$)->token_str = (*$1)->token_str + "%" + (*$3)->token_str;
 												}
 			| expr EQUAL expr					{
-													$$ = new t_token();
+													(*$$).reset( new t_token() );
 													// 前置き文があるならばそれを先に結合する
-													if($3->preamble_str != ""){
-														$$->token_str = $3->preamble_str;
+													if((*$3)->preamble_str != ""){
+														(*$$)->token_str = (*$3)->preamble_str;
 													}
-													$$->token_str += $1->token_str + "=" + $3->token_str;
+													(*$$)->token_str += (*$1)->token_str + "=" + (*$3)->token_str;
 												}
 			// 論理演算系
 			| expr EQUAL_EQUAL expr				{
-													if( ($1->type == TYPE_STRING) || ($2->type == TYPE_STRING) ) {
+													if( ((*$1)->type == TYPE_STRING) || ((*$2)->type == TYPE_STRING) ) {
 														yyerror("[ERROR] Can not do this kind of math with strings.\n");
 													}
-													$$ = new t_token(); $$->token_str = $1->token_str + "==" + $3->token_str;
+													(*$$).reset( new t_token());
+													(*$$)->token_str = (*$1)->token_str + "==" + (*$3)->token_str ;
 												}
 			| expr NOT_EQUAL expr				{
-													if( ($1->type == TYPE_STRING) || ($2->type == TYPE_STRING) ) {
+													if( ((*$1)->type == TYPE_STRING) || ((*$2)->type == TYPE_STRING) ) {
 														yyerror("[ERROR] Can not do this kind of math with strings.\n");
 													}
-													$$ = new t_token(); $$->token_str = $1->token_str + "<>" + $3->token_str;
+													(*$$).reset( new t_token());
+													(*$$)->token_str = (*$1)->token_str + "<>" + (*$3)->token_str ;
 												}
 			| expr LOGICAL_NOT					{
-													if( ($1->type == TYPE_STRING) || ($2->type == TYPE_STRING) ) {
+													if( ((*$1)->type == TYPE_STRING) || ((*$2)->type == TYPE_STRING) ) {
 														yyerror("[ERROR] Can not do this kind of math with strings.\n");
 													}
-													$$ = new t_token(); $$->token_str = "!" + $1->token_str; 				
+													(*$$).reset( new t_token());
+													(*$$)->token_str = "!" + (*$1)->token_str;
 												}
 			| expr LOGICAL_AND expr				{
-													if( ($1->type == TYPE_STRING) || ($2->type == TYPE_STRING) ) {
+													if( ((*$1)->type == TYPE_STRING) || ((*$2)->type == TYPE_STRING) ) {
 														yyerror("[ERROR] Can not do this kind of math with strings.\n");
 													}
-													$$ = new t_token(); $$->token_str = $1->token_str + "&&" + $3->token_str;
+													(*$$).reset( new t_token());
+													(*$$)->token_str = (*$1)->token_str + "&&" + (*$3)->token_str;
 												}
 			| expr LOGICAL_OR expr				{
-													if( ($1->type == TYPE_STRING) || ($2->type == TYPE_STRING) ) {
+													if( ((*$1)->type == TYPE_STRING) || ((*$2)->type == TYPE_STRING) ) {
 														yyerror("[ERROR] Can not do this kind of math with strings.\n");
 													}
-													$$ = new t_token(); $$->token_str = $1->token_str + "||" + $3->token_str;
+													(*$$).reset( new t_token());
+													(*$$)->token_str = (*$1)->token_str + "||" + (*$3)->token_str;
 												}
 			| expr GRATER_THAN_LEFT expr		{
-													if( ($1->type == TYPE_STRING) || ($2->type == TYPE_STRING) ) {
+													if( ((*$1)->type == TYPE_STRING) || ((*$2)->type == TYPE_STRING) ) {
 														yyerror("[ERROR] Can not do this kind of math with strings.\n");
 													}
-													$$ = new t_token(); $$->token_str = $1->token_str + "<" + $3->token_str;
+													(*$$).reset( new t_token());
+													(*$$)->token_str = (*$1)->token_str + "<" + (*$3)->token_str;
 												}
 			| expr GRATER_THAN_RIGHT expr		{
-													if( ($1->type == TYPE_STRING) || ($2->type == TYPE_STRING) ) {
+													if( ((*$1)->type == TYPE_STRING) || ((*$2)->type == TYPE_STRING) ) {
 														yyerror("[ERROR] Can not do this kind of math with strings.\n");
 													}
-													$$ = new t_token(); $$->token_str = $1->token_str + ">" + $3->token_str;
+													(*$$).reset( new t_token());
+													(*$$)->token_str = (*$1)->token_str + ">" + (*$3)->token_str;
 												}
 			| expr EQUAL_GRATER_THAN_LEFT expr	{
-													if( ($1->type == TYPE_STRING) || ($2->type == TYPE_STRING) ) {
+													if( ((*$1)->type == TYPE_STRING) || ((*$2)->type == TYPE_STRING) ) {
 														yyerror("[ERROR] Can not do this kind of math with strings.\n");
 													}
-													$$ = new t_token(); $$->token_str = $1->token_str + "=<" + $3->token_str;
+													(*$$).reset( new t_token());
+													(*$$)->token_str = (*$1)->token_str + "=<" + (*$3)->token_str;
 												}
 			| expr EQUAL_GRATER_THAN_RIGHT expr	{
-													if( ($1->type == TYPE_STRING) || ($2->type == TYPE_STRING) ) {
+													if( ((*$1)->type == TYPE_STRING) || ((*$2)->type == TYPE_STRING) ) {
 														yyerror("[ERROR] Can not do this kind of math with strings.\n");
 													}
-													$$ = new t_token(); $$->token_str = $1->token_str + "=>" + $3->token_str;
+													(*$$).reset( new t_token());
+													(*$$)->token_str = (*$1)->token_str + "=>" + (*$3)->token_str;
 												}
 			// ビット演算系
-			| BIT_NOT expr						{ $$ = new t_token(); $$->token_str = "~" + $1->token_str; }
-			| expr LEFT_SHIFT expr				{ $$ = new t_token(); $$->token_str = $1->token_str + "<<" + $3->token_str; }
-			| expr RIGHT_SHIFT expr				{ $$ = new t_token(); $$->token_str = $1->token_str + ">>" + $3->token_str; }
-			| expr LEFT_SHIFT_LOGIC expr		{ $$ = new t_token(); $$->token_str = $1->token_str + "<<<" + $3->token_str; }
-			| expr RIGHT_SHIFT_LOGIC expr		{ $$ = new t_token(); $$->token_str = $1->token_str + ">>>" + $3->token_str; }
-			| expr BIT_AND expr					{ $$ = new t_token(); $$->token_str = $1->token_str + "&" + $3->token_str; }
-			| expr BIT_OR expr					{ $$ = new t_token(); $$->token_str = $1->token_str + "|" + $3->token_str; }
-			| expr BIT_XOR expr					{ $$ = new t_token(); $$->token_str = $1->token_str + "|" + $3->token_str; }
+			| BIT_NOT expr						{ (*$$).reset( new t_token()); (*$$)->token_str = "~" + (*$1)->token_str; }
+			| expr LEFT_SHIFT expr				{ (*$$).reset( new t_token()); (*$$)->token_str = (*$1)->token_str + "<<" + (*$3)->token_str ; }
+			| expr RIGHT_SHIFT expr				{ (*$$).reset( new t_token()); (*$$)->token_str = (*$1)->token_str + ">>" + (*$3)->token_str ; }
+			| expr LEFT_SHIFT_LOGIC expr		{ (*$$).reset( new t_token()); (*$$)->token_str = (*$1)->token_str + "<<<" + (*$3)->token_str ; }
+			| expr RIGHT_SHIFT_LOGIC expr		{ (*$$).reset( new t_token()); (*$$)->token_str = (*$1)->token_str + ">>>" + (*$3)->token_str ; }
+			| expr BIT_AND expr					{ (*$$).reset( new t_token()); (*$$)->token_str = (*$1)->token_str + "&" + (*$3)->token_str ; }
+			| expr BIT_OR expr					{ (*$$).reset( new t_token()); (*$$)->token_str = (*$1)->token_str + "|" + (*$3)->token_str ; }
+			| expr BIT_XOR expr					{ (*$$).reset( new t_token()); (*$$)->token_str = (*$1)->token_str + "|" + (*$3)->token_str ; }
 			| TOKEN								{
-													$$ = new t_token(
+													(*$$).reset( new t_token(
 														*( function_manager::get_instance()->select_realname_to_t_token (
 															function_manager::get_instance()->get_function_name(),
-															$1->token_str
+															(*$1)->token_str
 														) )
+													)
 													);
 													// 実際に使用する変数は physicalname なので、 token_str には physicalnameを代入しておく
-													$$->token_str = function_manager::get_instance()->select_realname_to_physicalname(
+													(*$$)->token_str = function_manager::get_instance()->select_realname_to_physicalname(
 															function_manager::get_instance()->get_function_name(),
-															$1->token_str
+															(*$1)->token_str
 													);
 												}
 			// 配列の処理
 			| TOKEN	LEFT_INDEX_BRACKET expr RIGHT_INDEX_BRACKET	{
 														// int型以外を配列 index に指定したらあかん
-														if($3->type != TYPE_INT){
+														if((*$3)->type != TYPE_INT){
 															yyerror("[ERROR] Array index only use integer.\n");
 														}
-														$$ = new t_token(
+														(*$$).reset( new t_token(
 															*( function_manager::get_instance()->select_realname_to_t_token (
 																function_manager::get_instance()->get_function_name(),
-																$1->token_str
+																(*$1)->token_str
 															) )
+														)
 														);
 														// 実際に使用する変数は physicalname なので、 token_str には physicalnameを代入しておく
-														$$->token_str = function_manager::get_instance()->select_realname_to_physicalname(
+														(*$$)->token_str = function_manager::get_instance()->select_realname_to_physicalname(
 																function_manager::get_instance()->get_function_name(),
-																$1->token_str
+																(*$1)->token_str
 														);
-														$$->token_str += "[" + $3->token_str + "]";
-														switch($$->type){
+														(*$$)->token_str += "[" + (*$3)->token_str + "]";
+														switch((*$$)->type){
 															case TYPE_INT_ARRAY:
-																$$->type = TYPE_INT;
+																(*$$)->type = TYPE_INT;
 																break;
 															case TYPE_STRING_ARRAY:
-																$$->type = TYPE_STRING;
+																(*$$)->type = TYPE_STRING;
 																break;
 															default:
 																yyerror("[ERROR] Indexed access to non-array variables.\n");
@@ -640,27 +658,27 @@ expr		: INT_RETERAL						{ $$ = $1; $$->type = TYPE_INT; }
 /* 関数呼び出し */
 callst		: TOKEN BRACE manytokenst END_BRACE 			{
 																int arg_cnt = 0;
-																$$ = new t_token();
+																(*$$).reset( new t_token() );
 																// 前置き文があるならばそれを先に結合する
-																if($3->preamble_str != ""){
-																	$$->token_str = $3->preamble_str;
+																if((*$3)->preamble_str != ""){
+																	(*$$)->token_str = (*$3)->preamble_str;
 																}
 																// 引数の physical_name のリスト と arg 初期値リスト から初期値を代入するTTLコードを作成する
-																$$->token_str += initialize_arg($1->token_str, *$3);
+																(*$$)->token_str += initialize_arg((*$1)->token_str, *(*$3));
 																// 戻り値の physical_name のリスト から初期値を代入するTTLコードを作成する
-																$$->token_str += initialize_returnval($1->token_str);
-																$$->token_str += "call " + $1->token_str;
+																(*$$)->token_str += initialize_returnval((*$1)->token_str);
+																(*$$)->token_str += "call " + (*$1)->token_str;
 																// 関数情報は realname から取ってくることができるようにする
-																$$->realname = $1->token_str;	// 関数名はrealnameに保持
+																(*$$)->realname = (*$1)->token_str;	// 関数名はrealnameに保持
 															}
 			| RESERVED_WORD BRACE manytokenst END_BRACE		{
-																$$ = new t_token();
+																(*$$).reset( new t_token() );
 																// 前置き文があるならばそれを先に結合する
-																if($3->preamble_str != ""){
-																	$$->token_str = $3->preamble_str;
+																if((*$3)->preamble_str != ""){
+																	(*$$)->token_str = (*$3)->preamble_str;
 																}
-																$$->token_str += $1->token_str + " " + $3->token_str;
-																$$->realname = $1->token_str;	// 関数名はrealnameに保持
+																(*$$)->token_str += (*$1)->token_str + " " + (*$3)->token_str;
+																(*$$)->realname = (*$1)->token_str;	// 関数名はrealnameに保持
 															}
 			;
 
@@ -676,7 +694,7 @@ callst		: TOKEN BRACE manytokenst END_BRACE 			{
 	次のルールでやればよいか？
 		expr PLUS expr	:	{
 			・static int i=0;
-			・sprintf "%s%s" $1->token_str $3->token_str
+			・sprintf "%s%s" (*$1)->token_str (*$3)->token_str
 				テンポラリ変数(++i)=inputstr
 					を preamble_str に代入
 			・token_str=テンポラリ変数(i)
@@ -699,141 +717,141 @@ callst		: TOKEN BRACE manytokenst END_BRACE 			{
 			・token_str=テンポラリ変数(2)
 		}
 	manytokenst	: manytokenst COMMA expr		: {
-		$$->preamble_str=$1->preamble_str + $3->preamble_str;
-		$$->token_str = $1->token_str + " " + $3->token_str;
+		(*$$)->preamble_str=(*$1)->preamble_str + (*$3)->preamble_str;
+		(*$$)->token_str = (*$1)->token_str + " " + (*$3)->token_str;
 	}
 	RESERVED_WORD BRACE manytokenst END_BRACE	: {
 		// 前置き文があるならばそれを先に結合する
-		if($3->preamble_str != ""){
-			$$->token_str = $3->preamble_str;
+		if((*$3)->preamble_str != ""){
+			(*$$)->token_str = (*$3)->preamble_str;
 		}
-		$$->token_str = "messagebox" + " " + $3->token_str;
+		(*$$)->token_str = "messagebox" + " " + (*$3)->token_str;
 	}
 
 */
 manytokenst	: manytokenst COMMA expr				{
-														$$ = new t_token(*$3);
-														$$->preamble_str=$1->preamble_str + $3->preamble_str;
-														$$->token_str = $1->token_str + " " + $3->token_str;
+														(*$$).reset( new t_token(*(*$3)) );
+														(*$$)->preamble_str=(*$1)->preamble_str + (*$3)->preamble_str;
+														(*$$)->token_str = (*$1)->token_str + " " + (*$3)->token_str;
 													}
 			| expr									{
-														$$ = $1;
+														(*$$) = (*$1);
 													}
 			;
 
 /* if文系の処理 */
-else_if_list: else_if_list else_if_list						{ $$ = new t_token(*$1 + *$2); }
+else_if_list: else_if_list else_if_list						{ (*$$).reset( new t_token(*(*$1) + *(*$2)) ); }
 			| ELSE IF expr THEN codes						{
-																t_token *ret = new t_token();;
-																ret->token_str = 	"elseif (" + $3->token_str + ") then\n" 
-																					+ $5->token_str + "\n";
-																$$ = ret;
+																std::shared_ptr< t_token> ret( new t_token() );
+																ret->token_str = 	"elseif (" + (*$3)->token_str + ") then\n" 
+																					+ (*$5)->token_str + "\n";
+																(*$$) = ret;
 															}
 			;
 
 ifst		: IF expr THEN codes ENDIF						{
-																t_token *ret = new t_token();;
-																ret->token_str = 	"if (" + $2->token_str + ") then\n" 
-																					+ $4->token_str + "\n"
+																std::shared_ptr<t_token> ret( new t_token());
+																ret->token_str = 	"if (" + (*$2)->token_str + ") then\n" 
+																					+ (*$4)->token_str + "\n"
 																					+ "endif\n";
-																$$ = ret;
+																(*$$) = ret;
 															}
 			| IF expr THEN codes ELSE codes ENDIF			{
-																t_token *ret = new t_token();;
-																ret->token_str = 	"if (" + $2->token_str + ") then\n" 
-																					+ $4->token_str + "\n"
+																std::shared_ptr<t_token> ret( new t_token());
+																ret->token_str = 	"if (" + (*$2)->token_str + ") then\n" 
+																					+ (*$4)->token_str + "\n"
 																					+ "else\n"
-																					+ $6->token_str + "\n"
+																					+ (*$6)->token_str + "\n"
 																					+ "endif\n";
-																$$ = ret;
+																(*$$) = ret;
 															}
 			| IF expr THEN codes else_if_list ENDIF			{
-																t_token *ret = new t_token();;
-																ret->token_str = 	"if (" + $2->token_str + ") then\n" 
-																					+ $4->token_str + "\n"
-																					+ $5->token_str + "\n"
+																std::shared_ptr<t_token> ret( new t_token());
+																ret->token_str = 	"if (" + (*$2)->token_str + ") then\n" 
+																					+ (*$4)->token_str + "\n"
+																					+ (*$5)->token_str + "\n"
 																					+ "endif\n";
-																$$ = ret;
+																(*$$) = ret;
 															}
 			| IF expr THEN codes else_if_list ELSE codes ENDIF	{
-																t_token *ret = new t_token();;
-																ret->token_str = 	"if (" + $2->token_str + ") then\n" 
-																					+ $4->token_str + "\n"
-																					+ $5->token_str + "\n"
+																std::shared_ptr<t_token> ret( new t_token());
+																ret->token_str = 	"if (" + (*$2)->token_str + ") then\n" 
+																					+ (*$4)->token_str + "\n"
+																					+ (*$5)->token_str + "\n"
 																					+ "else\n"
-																					+ $7->token_str + "\n"
+																					+ (*$7)->token_str + "\n"
 																					+ "endif\n";
-																$$ = ret;
+																(*$$) = ret;
 															}
 			;
 
 /* for文系の処理 */
 forst   :   FOR TOKEN EQUAL expr TO expr codes NEXT			{
-																t_token *ret = new t_token();
+																std::shared_ptr<t_token> ret( new t_token());
 																ret->token_str = 	"for " + function_manager::get_instance()->select_realname_to_physicalname (
 																								function_manager::get_instance()->get_function_name(),
-																								$2->token_str
+																								(*$2)->token_str
 																							)
-																					+ " " + $4->token_str + " " + $6->token_str + " \n" 
-																					+ $7->token_str + "\n"
+																					+ " " + (*$4)->token_str + " " + (*$6)->token_str + " \n" 
+																					+ (*$7)->token_str + "\n"
 																					+ "next\n";
-																$$ = ret;
+																(*$$) = ret;
 															}
 		|   FOR TOKEN EQUAL expr TO expr STEP expr codes NEXT {
-																t_token *ret = new t_token();
+																std::shared_ptr<t_token> ret( new t_token());
 																std::string counter_val = function_manager::get_instance()->select_realname_to_physicalname (
 																								function_manager::get_instance()->get_function_name(),
-																								$2->token_str
+																								(*$2)->token_str
 																							);
-																ret->token_str = 	counter_val + "=" + $4->token_str + "\n"
-																					+ "while " + counter_val + "<>" + $6->token_str + "\n"
-																					+ $9->token_str + "\n"
-																					+ counter_val + "=" + counter_val + "+ (" + $8->token_str + ")\n" 
+																ret->token_str = 	counter_val + "=" + (*$4)->token_str + "\n"
+																					+ "while " + counter_val + "<>" + (*$6)->token_str + "\n"
+																					+ (*$9)->token_str + "\n"
+																					+ counter_val + "=" + counter_val + "+ (" + (*$8)->token_str + ")\n" 
 																					+ "endwhile\n";
-																$$ = ret;
+																(*$$) = ret;
 															}
 		;
 
 /* while文系の処理 */
 dowhilest	: DO WHILE expr codes LOOP						{
-																t_token *ret = new t_token();
-																ret->token_str = 	"do while " + $3->token_str + "\n" 
-																					+ $4->token_str + "\n"
+																std::shared_ptr<t_token> ret( new t_token());
+																ret->token_str = 	"do while " + (*$3)->token_str + "\n" 
+																					+ (*$4)->token_str + "\n"
 																					+ "loop\n";
-																$$ = ret;
+																(*$$) = ret;
 											}
 			|	WHILE expr codes ENDWHILE					{
-																t_token *ret = new t_token();
-																ret->token_str = 	"while " + $2->token_str + "\n" 
-																					+ $3->token_str + "\n"
+																std::shared_ptr<t_token> ret( new t_token());
+																ret->token_str = 	"while " + (*$2)->token_str + "\n" 
+																					+ (*$3)->token_str + "\n"
 																					+ "endwhile\n";
-																$$ = ret;
+																(*$$) = ret;
 															}
 			;
 
 /* return */
 retrnst		:	RETRN expr		{
 									int ret_cnt = 0;
-									$$ = new t_token();
+									(*$$).reset( new t_token() );
 									std::string function_name = function_manager::get_instance()->get_function_name();
-									std::vector<t_token> ret_array = function_manager::get_instance()->select_functionname_to_returnval_t_token_info_list(function_name);
+									std::vector<std::shared_ptr<t_token>> ret_array = function_manager::get_instance()->select_functionname_to_returnval_t_token_info_list(function_name);
 									std::vector<std::string> ret_name_array = function_manager::get_instance()->select_functionname_to_returnval_physicalname_list(function_name);
 									// 前置き文があるならばそれを先に結合する
-									std::cout << "$2->preamble_str :" << $2->preamble_str << "\n";
-									std::cout << "$2->token_str :" << $2->token_str << "\n";
-									if($2->preamble_str != ""){
-										$$->token_str = $2->preamble_str + "\n";
+									std::cout << "(*$2)->preamble_str :" << (*$2)->preamble_str << "\n";
+									std::cout << "(*$2)->token_str :" << (*$2)->token_str << "\n";
+									if((*$2)->preamble_str != ""){
+										(*$$)->token_str = (*$2)->preamble_str + "\n";
 									}
 									if(ret_name_array.size() != 1){
 										yyerror("[ERROR] The number of return values you are looking for does not match.\n");
 										exit(-1);
 									}
 									for(std::string x : ret_name_array){
-										$$->token_str += x + "=";
-										switch(ret_array[ret_cnt].type) {
+										(*$$)->token_str += x + "=";
+										switch(ret_array[ret_cnt]->type) {
 											case TYPE_INT:
 											case TYPE_STRING:
-												$$->token_str += $2->token_str + "\n";
+												(*$$)->token_str += (*$2)->token_str + "\n";
 												break;
 											case TYPE_VOID:
 												/* do nothing */
@@ -855,27 +873,27 @@ retrnst		:	RETRN expr		{
 									}
 								}
 			|	RETRN LEFT_INDEX_BRACKET manytokenst RIGHT_INDEX_BRACKET		{
-									$$ = new t_token();
+									(*$$).reset( new t_token() );
 									std::string function_name = function_manager::get_instance()->get_function_name();
-									std::vector<t_token> ret_array = function_manager::get_instance()->select_functionname_to_returnval_t_token_info_list(function_name);
+									std::vector<std::shared_ptr< t_token > > ret_array = function_manager::get_instance()->select_functionname_to_returnval_t_token_info_list(function_name);
 									std::vector<std::string> ret_name_array = function_manager::get_instance()->select_functionname_to_returnval_physicalname_list(function_name);
 									int ret_cnt = 0;
 
 									// 前置き文があるならばそれを先に結合する
-									std::cout << "$3->preamble_str :" << $3->preamble_str << "\n";
-									std::cout << "$3->token_str :" << $3->token_str << "\n";
-									if($3->preamble_str != ""){
-										$$->token_str = $3->preamble_str + "\n";
+									std::cout << "(*$3)->preamble_str :" << (*$3)->preamble_str << "\n";
+									std::cout << "(*$3)->token_str :" << (*$3)->token_str << "\n";
+									if((*$3)->preamble_str != ""){
+										(*$$)->token_str = (*$3)->preamble_str + "\n";
 									}
 
 									// 戻り値として返す値のリストを作成しておく
-									std::vector<std::string> initialize_list = common_utl::split($3->token_str, ' ');
+									std::vector<std::string> initialize_list = common_utl::split((*$3)->token_str, ' ');
 									for(std::string x : ret_name_array){
-										$$->token_str += x + "=";
-										switch(ret_array[ret_cnt].type) {
+										(*$$)->token_str += x + "=";
+										switch(ret_array[ret_cnt]->type) {
 											case TYPE_INT:
 											case TYPE_STRING:
-												$$->token_str += initialize_list[ret_cnt] + "\n";
+												(*$$)->token_str += initialize_list[ret_cnt] + "\n";
 												break;
 											case TYPE_VOID:
 												/* do nothing */
@@ -897,9 +915,9 @@ retrnst		:	RETRN expr		{
 									}
 								}
 			|	RETRN			{
-									t_token *ret = new t_token();
+									std::shared_ptr<t_token> ret( new t_token());
 									ret->token_str = "";
-									$$ = ret;
+									(*$$) = ret;
 								}
 			;
 
@@ -928,14 +946,14 @@ std::string initialize_arg(std::string & function_name, t_token & input_args) {
 
 // 戻り値の physical_name のリスト から初期値を代入するTTLコードを作成して返す
 std::string initialize_returnval(std::string & function_name) {
-	std::vector<t_token> ret_array = function_manager::get_instance()->select_functionname_to_returnval_t_token_info_list(function_name);
+	std::vector<std::shared_ptr< t_token > > ret_array = function_manager::get_instance()->select_functionname_to_returnval_t_token_info_list(function_name);
 	std::vector<std::string> ret_name_array = function_manager::get_instance()->select_functionname_to_returnval_physicalname_list(function_name);
 	std::string ret = "";
     int ret_cnt = 0;
 
 	for(std::string x : ret_name_array){
         ret += x + "=";
-		switch(ret_array[ret_cnt++].type) {
+		switch(ret_array[ret_cnt++]->type) {
 			case TYPE_INT:
 				ret += "0\n";
 				break;
