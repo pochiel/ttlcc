@@ -1,0 +1,24 @@
+#define END_OF_NUMBER (100)
+#define MESSAGE_FIZZ ("FIZZ!!")
+#define MESSAGE_BUZZ ("BUZZ!!")
+#define MESSAGE_FIZBUZ ("FizzBuzz!!")
+
+func int main(void)
+    int i = 0;
+    string mes = "";
+	for i=1 to END_OF_NUMBER
+        mes = mes + "number:" + i + "    ";
+		if ((i%3)==0)&&((i%5)==0) then
+			// FizBuz!
+            mes = mes + MESSAGE_FIZBUZ;
+		else if ((i%5)==0) then
+            mes = mes + MESSAGE_BUZZ;
+		else if ((i%3)==0) then
+            mes = mes + MESSAGE_FIZZ;
+		else
+			continue;
+		endif
+        messagebox(mes, "FizzBuzz test!");
+		mes = "";
+	next
+endfunc

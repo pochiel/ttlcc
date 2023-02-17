@@ -484,7 +484,14 @@ array_reteral	: LEFT_INDEX_BRACKET return_vars RIGHT_INDEX_BRACKET 	{ $$ = $2; }
 expr		: INT_RETERAL						{ $$ = $1; $$->type = TYPE_INT; }
 			| STR_RETERAL						{ $$ = $1; $$->type = TYPE_STRING; }
 			| MINUS_INT_RETERAL					{ $$ = $1; $$->type = TYPE_INT; }
-			| BRACE expr END_BRACE				{ $$ = new t_token(*$2); $$->token_str = "(" + $2->token_str + ")"; }
+			| BRACE expr END_BRACE				{
+													$$ = new t_token(*$2);
+													if( $2->type == TYPE_STRING ){
+														$$->token_str = $2->token_str;
+													} else {
+														$$->token_str = "(" + $2->token_str + ")";
+													}
+												}
 			| expr PLUS expr					{ 
 													if( ($1->type == TYPE_STRING) || ($3->type == TYPE_STRING) ){
 														// ‚Ç‚¿‚ç‚©‚ª•¶Žš—ñŒ^‚È‚ç•¶Žš—ñŒ‹‡
