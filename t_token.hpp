@@ -30,6 +30,7 @@ public:
     std::string physicalname;
     t_token * synbol_info;
     bool is_lending;
+	int array_size;
 	//  +演算子のオーバーロード
 	t_token operator+(const t_token& t2);
 	// callst(関数呼び出し) の引数など

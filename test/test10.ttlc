@@ -1,0 +1,14 @@
+// 配列のテスト
+func int main(void)
+    int v[4] = [0,1,2,3];
+    int w[4] = [10,20,30,40];
+    string mes[4] = ["abc", "def", "ghi", "jkl"];
+    int i=0;
+    // 代入
+    v = w;
+    for i=0 to (len(v) - 1)
+        v[i] = v[i] + i;
+        messagebox(v[i], mes[i]);
+    next
+	return 0;
+endfunc

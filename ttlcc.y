@@ -27,6 +27,10 @@ extern "C" int  yylex(void);
 
 void breakp(t_token & t){
 }
+
+bool is_array(t_token * t){
+	return ((t->type == TYPE_INT_ARRAY)||(t->type == TYPE_STRING_ARRAY) );
+}
 %}
 
 %code requires {
@@ -52,7 +56,7 @@ void breakp(t_token & t){
 %token<ctype> FUNCTION ENDFUNCTION
 %token<ctype> BREAK CONTINUE RETRN 
 %token<ctype> INT STRING VOID STR_RETERAL INT_RETERAL MINUS_INT_RETERAL
-%token<ctype> EQUAL BIT_NOT PLUS MINUS ASTA SLASH MOD LEFT_SHIFT RIGHT_SHIFT LEFT_SHIFT_LOGIC RIGHT_SHIFT_LOGIC COMMA
+%token<ctype> EQUAL BIT_NOT PLUS MINUS ASTA SLASH MOD LEFT_SHIFT RIGHT_SHIFT LEFT_SHIFT_LOGIC RIGHT_SHIFT_LOGIC COMMA LEN
 %token<ctype> BIT_AND BIT_XOR BIT_OR GRATER_THAN_LEFT GRATER_THAN_RIGHT EQUAL_GRATER_THAN_LEFT EQUAL_GRATER_THAN_RIGHT
 %token<ctype> EQUAL_EQUAL LOGICAL_NOT NOT_EQUAL LOGICAL_AND LOGICAL_OR 
 %token<ctype> TOKEN RESERVED_WORD
@@ -61,7 +65,7 @@ void breakp(t_token & t){
 %token<ctype> EXTERN
 
 /* 非終端記号 */
-%type<ctype> program codes var ifst forst functionst dowhilest retrnst expr return_types args typest callst manytokenst functionnamest else_if_list initialize_intval_st initialize_strval_st return_vars accessable_var array_reteral prototypest
+%type<ctype> program codes var ifst forst functionst dowhilest retrnst expr return_types args typest callst manytokenst functionnamest else_if_list initialize_intval_st initialize_strval_st return_vars accessable_var array_reteral prototypest len_target
 
 %start program
 
@@ -107,12 +111,9 @@ functionst	:	FUNCTION return_types functionnamest BRACE args END_BRACE {
 														int ret_cnt = 0;
 														std::vector<t_token> input_list;
 														t_token * tmp_token_ptr = $5;
-														breakp(*$5);
 														std::vector<std::string> initialize_list = common_utl::split($5->token_str, ',');
 														while(tmp_token_ptr!=NULL){
 															if(initialize_list.size()!=0){
-																// std::cout << "initialize_list[ret_cnt++]:" << initialize_list[ret_cnt] << "\n";
-																// std::cout << "common_utl::split( initialize_list[ret_cnt++], ' ')[1]:" << common_utl::split( initialize_list[ret_cnt++], ' ')[1] << "\n";
 																tmp_token_ptr->token_str = common_utl::split( initialize_list[ret_cnt++], ' ')[1];
 															}
 															input_list.push_back(*tmp_token_ptr);
@@ -186,6 +187,16 @@ typest		:	INT								{
 			|	VOID							{	$$ = new t_token();
 													$$->type = TYPE_VOID;
 												}
+			|	INT LEFT_INDEX_BRACKET RIGHT_INDEX_BRACKET {
+													$$ = new t_token();
+													$$->token_str = "int[]";
+													$$->type = TYPE_INT_ARRAY;
+												}
+			|	STRING LEFT_INDEX_BRACKET RIGHT_INDEX_BRACKET {
+													$$ = new t_token();
+													$$->token_str = "string[]";
+													$$->type = TYPE_STRING_ARRAY;
+												}
 			;
 
 initialize_intval_st	:	initialize_intval_st COMMA INT_RETERAL	{
@@ -227,6 +238,10 @@ var			:	typest TOKEN					{
 															// int型変数を初期化
 															$$->token_str = $$->token_str + "=0\n";
 															break;
+														case TYPE_INT_ARRAY:
+														case TYPE_STRING_ARRAY:
+															yyerror("[ERROR] Array declaration without subscript specification is not allowed.\n");
+															break;
 														case TYPE_VOID:
 														default:
 															yyerror("[ERROR] A void type variable cannot be created.\n");
@@ -257,6 +272,10 @@ var			:	typest TOKEN					{
 															// int型変数を初期化
 															$$->token_str = $$->token_str + "=" + $4->token_str.c_str() + "\n";
 															break;
+														case TYPE_INT_ARRAY:
+														case TYPE_STRING_ARRAY:
+															yyerror("[ERROR] Array declaration without subscript specification is not allowed.\n");
+															break;
 														case TYPE_VOID:
 														default:
 															yyerror("[ERROR] A void type variable cannot be created.\n");
@@ -267,6 +286,7 @@ var			:	typest TOKEN					{
 			|	INT TOKEN LEFT_INDEX_BRACKET INT_RETERAL RIGHT_INDEX_BRACKET	{
 													$$ = new t_token(*$2);
 													$$->type = TYPE_INT_ARRAY;
+													$$->array_size = stoi($4->token_str);
 													// ローカル変数名の設定
 													function_manager::get_instance()->set_localname_and_realname(
 														function_manager::get_instance()->get_function_name(),
@@ -279,12 +299,14 @@ var			:	typest TOKEN					{
 															function_manager::get_instance()->get_function_name(),
 															$2->token_str
 													);
-													$$->token_str = "intdim " + $$->token_str + " " + $5->token_str + "\n";
+													$$->token_str = "intdim " + $$->token_str + " " + $4->token_str + "\n";
+													printf("realname=%s\n", $2->token_str.c_str());
 												}
 			// 文字列配列（初期化なし）
 			|	STRING TOKEN LEFT_INDEX_BRACKET INT_RETERAL RIGHT_INDEX_BRACKET	{
 													$$ = new t_token(*$2);
 													$$->type = TYPE_STRING_ARRAY;
+													$$->array_size = stoi($4->token_str);
 													// ローカル変数名の設定
 													function_manager::get_instance()->set_localname_and_realname(
 														function_manager::get_instance()->get_function_name(),
@@ -297,13 +319,14 @@ var			:	typest TOKEN					{
 															function_manager::get_instance()->get_function_name(),
 															$2->token_str
 													);
-													$$->token_str = "strdim " + $$->token_str + " " + $5->token_str + "\n";
+													$$->token_str = "strdim " + $$->token_str + " " + $4->token_str + "\n";
 												}
 			// 整数配列（初期化あり）
 			|	INT TOKEN LEFT_INDEX_BRACKET INT_RETERAL RIGHT_INDEX_BRACKET EQUAL LEFT_INDEX_BRACKET initialize_intval_st RIGHT_INDEX_BRACKET {
 													std::vector<std::string> initialize_list = common_utl::split($8->token_str, ' ');
 													$$ = new t_token(*$2);
 													$$->type = TYPE_INT_ARRAY;
+													$$->array_size = stoi($4->token_str);
 													// ローカル変数名の設定
 													function_manager::get_instance()->set_localname_and_realname(
 														function_manager::get_instance()->get_function_name(),
@@ -317,7 +340,7 @@ var			:	typest TOKEN					{
 															$2->token_str
 													);
 													std::string local_name = $$->token_str;
-													$$->token_str = "intdim " + local_name + " " + $5->token_str + "\n";
+													$$->token_str = "intdim " + local_name + " " + $4->token_str + "\n";
 													// 初期化処理の追加
 													int i=0;
 													for(std::string x : initialize_list){
@@ -330,6 +353,7 @@ var			:	typest TOKEN					{
 													std::vector<std::string> initialize_list = common_utl::split($8->token_str, ' ');
 													$$ = new t_token(*$2);
 													$$->type = TYPE_INT_ARRAY;
+													$$->array_size = stoi($4->token_str);
 													// ローカル変数名の設定
 													function_manager::get_instance()->set_localname_and_realname(
 														function_manager::get_instance()->get_function_name(),
@@ -343,7 +367,7 @@ var			:	typest TOKEN					{
 															$2->token_str
 													);
 													std::string local_name = $$->token_str;
-													$$->token_str = "strdim " + local_name + " " + $5->token_str + "\n";
+													$$->token_str = "strdim " + local_name + " " + $4->token_str + "\n";
 													// 初期化処理の追加
 													int i=0;
 													for(std::string x : initialize_list){
@@ -489,6 +513,23 @@ return_vars	: return_vars COMMA accessable_var							{
 array_reteral	: LEFT_INDEX_BRACKET return_vars RIGHT_INDEX_BRACKET 	{ $$ = $2; }
 				;
 
+len_target		:	TOKEN						{ 
+													$$ = new t_token(
+														*( function_manager::get_instance()->select_realname_to_t_token (
+															function_manager::get_instance()->get_function_name(),
+															$1->token_str
+														) )
+													);
+													// 実際に使用する変数は physicalname なので、 token_str には physicalnameを代入しておく
+													$$->token_str = function_manager::get_instance()->select_realname_to_physicalname(
+															function_manager::get_instance()->get_function_name(),
+															$1->token_str
+													);
+												}
+				|	BRACE len_target END_BRACE	{
+													$$ = $2;
+												}
+
 expr		: INT_RETERAL						{ $$ = $1; $$->type = TYPE_INT; }
 			| STR_RETERAL						{ $$ = $1; $$->type = TYPE_STRING; }
 			| MINUS_INT_RETERAL					{ $$ = $1; $$->type = TYPE_INT; }
@@ -537,11 +578,23 @@ expr		: INT_RETERAL						{ $$ = $1; $$->type = TYPE_INT; }
 												}
 			| expr EQUAL expr					{
 													$$ = new t_token();
-													// 前置き文があるならばそれを先に結合する
-													if($3->preamble_str != ""){
-														$$->token_str = $3->preamble_str;
+													// 配列か否か
+													if( (!is_array($1)) && (!is_array($3)) ){
+														// 前置き文があるならばそれを先に結合する
+														if($3->preamble_str != ""){
+															$$->token_str = $3->preamble_str;
+														}
+														$$->token_str += $1->token_str + "=" + $3->token_str;
+													} else {
+														// 配列です
+														if($1->array_size != $3->array_size){
+															yyerror("[ERROR] Assignment between arrays of different sizes is not allowed.");
+														}
+														// 代入処理の追加
+														for(int x = 0; x < $1->array_size ; x++){
+															$$->token_str += $1->token_str + "[" + std::to_string(x) + "]=" + $3->token_str + "[" + std::to_string(x) + "]\n";
+														}
 													}
-													$$->token_str += $1->token_str + "=" + $3->token_str;
 												}
 			// 論理演算系
 			| expr EQUAL_EQUAL expr				{
@@ -607,6 +660,16 @@ expr		: INT_RETERAL						{ $$ = $1; $$->type = TYPE_INT; }
 			| expr BIT_AND expr					{ $$ = new t_token(); $$->token_str = $1->token_str + "&" + $3->token_str; }
 			| expr BIT_OR expr					{ $$ = new t_token(); $$->token_str = $1->token_str + "|" + $3->token_str; }
 			| expr BIT_XOR expr					{ $$ = new t_token(); $$->token_str = $1->token_str + "|" + $3->token_str; }
+			// 配列要素数演算子
+			| LEN len_target					{
+													// len演算子は配列にしか使えません
+													if( ! is_array($2) ){
+														yyerror("[ERROR] The LEN operator cannot be used for non-arrays.\n");
+													}
+													$$ = new t_token();
+													$$->token_str = std::to_string($2->array_size);
+													$$->type = TYPE_INT;
+												}
 			| TOKEN								{
 													$$ = new t_token(
 														*( function_manager::get_instance()->select_realname_to_t_token (

@@ -18,6 +18,7 @@
 		parent_function = "";
 		physicalname = "";
 		synbol_info = NULL;
+		array_size=0;
 	}
 	t_token::t_token(const t_token &t){
 		*this = t;
