@@ -9,20 +9,29 @@ EOM
   exit 2
 }
 
+# optionをパース
 OPTION_STR=
 
 # 引数別の処理定義
-while getopts ":o:h" optKey; do
-  case "$optKey" in
-    o)
-        OPTION_STR="-n " ${OPTARG}
+while (( $# > 0 ))
+do
+    case $1 in
+    -o)
+        OPTION_STR="-o "$2
+        shift
         ;;
-    '-h'|'--help'|* )
-      usage
-      ;;
-  esac
+    -h)
+        usage
+        exit 1
+        ;;
+    *)
+        TARGET_FILE=$1
+    ;;
+    esac
+    shift
 done
-# コンパイル実効
-./ttlcpp $1
+
+# コンパイル実行
+./ttlcpp ${TARGET_FILE}
 ./ttlcc out.ttlcs ${OPTION_STR}
 rm ./out.ttlcs

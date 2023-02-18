@@ -21,4 +21,5 @@ func int main(void)
         messagebox(mes, "FizzBuzz test!");
 		mes = "";
 	next
+	return 0;
 endfunc

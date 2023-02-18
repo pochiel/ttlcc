@@ -121,10 +121,13 @@ functionst	:	FUNCTION return_types functionnamest BRACE args END_BRACE {
 
 														// 戻り値リストを作成
 														std::vector<t_token> retrn_list;
-														tmp_token_ptr = $2;
-														while(tmp_token_ptr!=NULL){
-															retrn_list.push_back(*tmp_token_ptr);
-															tmp_token_ptr = tmp_token_ptr->next_token;
+														// void から始まる戻り値リストは許容しない
+														if($2->type != TYPE_VOID){
+															tmp_token_ptr = $2;
+															while(tmp_token_ptr!=NULL){
+																retrn_list.push_back(*tmp_token_ptr);
+																tmp_token_ptr = tmp_token_ptr->next_token;
+															}
 														}
 
 														// 関数情報を登録
@@ -149,10 +152,13 @@ prototypest	:	EXTERN FUNCTION return_types functionnamest BRACE args END_BRACE {
 														}
 														// 戻り値リストを作成
 														std::vector<t_token> retrn_list;
-														tmp_token_ptr = $3;
-														while(tmp_token_ptr!=NULL){
-															retrn_list.push_back(*tmp_token_ptr);
-															tmp_token_ptr = tmp_token_ptr->next_token;
+														// void から始まる戻り値リストは許容しない
+														if($3->type != TYPE_VOID){
+															tmp_token_ptr = $3;
+															while(tmp_token_ptr!=NULL){
+																retrn_list.push_back(*tmp_token_ptr);
+																tmp_token_ptr = tmp_token_ptr->next_token;
+															}
 														}
 														// 関数情報を登録（TTLマクロ的には特にすることはない）
 														function_manager::get_instance()->set_function_info($4->token_str, input_list, retrn_list, true);
@@ -177,7 +183,9 @@ typest		:	INT								{
 													$$->token_str = "string";
 													$$->type = TYPE_STRING;
 												}
-			|	VOID							{ $$ = $1; }
+			|	VOID							{	$$ = new t_token();
+													$$->type = TYPE_VOID;
+												}
 			;
 
 initialize_intval_st	:	initialize_intval_st COMMA INT_RETERAL	{

@@ -21,5 +21,4 @@ func void test_func(int x)
         else
     		messagebox(x, "奇数です");
         endif
-		return 0;
 endfunc

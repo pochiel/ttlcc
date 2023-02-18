@@ -1,0 +1,5 @@
+func int main(void)
+    /* first program */
+    messagebox("Hello, World!", "Hello, World!");
+    return 0;
+endfunc

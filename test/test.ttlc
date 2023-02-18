@@ -12,5 +12,4 @@ func void test_func(int abc)
 		test_val=test_val_2 + test_val_3 + abc;
 		/* first program */
 		messagebox(test_val, "Hello, World!");
-		return 0;
 endfunc
