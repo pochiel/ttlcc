@@ -143,6 +143,7 @@ NUMBER   {integer}
 	"["										{	return(LEFT_INDEX_BRACKET);			}
 	"]"										{	return(RIGHT_INDEX_BRACKET);		}
 	"len"									{	return(LEN);						}
+	"as_is"									{	return(AS_IS_TOKEN);				}
 	"-"{NUMBER} 							{
 												printf("NUMBER=%s\n", yytext);
 												SET_YYLVAL(yytext); return(MINUS_INT_RETERAL);

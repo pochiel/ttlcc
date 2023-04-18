@@ -1,12 +1,11 @@
 # 注意
-2023/01/12 現在、mainブランチはビルド不可能です。　悲しいなあ。  
+2023/02/18 それとなく使えるようになってきた。  
 
 # ttlcc
 A wrapper language transpiler that outputs Tera Term macros.  
 Tera Term マクロを出力するラッパー言語のトランスパイラ。  
-**まだ言語仕様を練っている段階なので、このリポジトリには全く役に立つものは入ってない。**　回れ右。  
-ローカルでテキストに言語仕様を書いていたらいろいろあって書いていたほとんどをロストしてしまったのであった。　いっぱい悲しい。  
-やっぱ git は正義なんやな。  
+まだ役に立つものではない。
+
 # ttlcとは
 ttlc(Tera Term Language custom)とは、Tera Termのマクロ言語である  
 ttl(Tera Term Language)のラッパー言語である。  
@@ -15,7 +14,7 @@ ttlc は下記の特徴を持つ。
 
 * ~~再入可能な関数~~ ←無理そうです。
 * ローカルスコープとローカル変数
-* 直感的に理解しやすい include
+* プリプロセスによるC言語ライクでシンプルな defineマクロ（実装済）と、直感的に理解しやすい include（未実装）
 * 演算子による文字列処理、型キャスト
 
 # 関数と予約語
@@ -24,9 +23,9 @@ main関数は ttlc の Entory Point である。
 下記は ttlc における Hello, world である。  
 
 ```
-	func int main()
+	func int main(void)
 		/* first program */
-		sendln('Hello, world');
+		messagebox("Hello, World!", "Hello, World!");
 		return 0;
 	endfunc
 ```
@@ -43,15 +42,15 @@ ttl における命令は基本的には予約語となり、ttlcにおいても
 * goto：使用できない。(予定 Ver0.0現在）
 * gosub：使用できない。(予定 Ver0.0現在）
 
-上述したとおり、main関数は ttlc マクロプログラムの Entry Point であるが、ライブラリを作成したい場合 main関数は省略しなければならない。  
-ライブラリ用途の ttlc プログラムは、エラーチェックのためにトランスパイルすることはできるが、ttl マクロの実体を生成しない。  
-あくまで、main関数を持つプログラム本体から import されて使用されることを想定する。  
+上述したとおり、main関数は ttlc マクロプログラムの Entry Point であるが、ライブラリを作成したい場合 main関数は省略しなければならない。  (未実装)
+ライブラリ用途の ttlc プログラムは、エラーチェックのためにトランスパイルすることはできるが、ttl マクロの実体を生成しない。  (未実装)
+あくまで、main関数を持つプログラム本体から import されて使用されることを想定する。  (未実装)
   
 （※この仕様は将来バージョンで変更される可能性がある）  
 
 
 上述の通り、ttlc における関数は戻り値も複数持つことができる。  
-下記は、int型を4つreturnする関数である。  
+下記は、int型を4つreturnする関数である。  (未実装)
 
 ```
 	func int int int int get_address_offset(string ip_addr)

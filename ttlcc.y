@@ -63,9 +63,10 @@ bool is_array(t_token * t){
 %token<ctype> CR BRACE END_BRACE IMPORT
 %token<ctype> LEFT_INDEX_BRACKET RIGHT_INDEX_BRACKET
 %token<ctype> EXTERN
+%token<ctype> AS_IS_TOKEN
 
 /* 非終端記号 */
-%type<ctype> program codes var ifst forst functionst dowhilest retrnst expr return_types args typest callst manytokenst functionnamest else_if_list initialize_intval_st initialize_strval_st return_vars accessable_var array_reteral prototypest len_target
+%type<ctype> program codes var ifst forst functionst dowhilest retrnst expr return_types args typest callst manytokenst functionnamest else_if_list initialize_intval_st initialize_strval_st return_vars accessable_var array_reteral prototypest len_target as_is_st
 
 %start program
 
@@ -283,9 +284,13 @@ var			:	typest TOKEN					{
 													}
 												}
 			// 整数配列（初期化なし）
-			|	INT TOKEN LEFT_INDEX_BRACKET INT_RETERAL RIGHT_INDEX_BRACKET	{
+			|	INT TOKEN LEFT_INDEX_BRACKET expr RIGHT_INDEX_BRACKET	{
+													if(	$4->type != TYPE_INT) {
+														yyerror("[ERROR] Array index specified only int.\n");
+													}
 													$$ = new t_token(*$2);
 													$$->type = TYPE_INT_ARRAY;
+													// array_sizeの設定
 													$$->array_size = stoi($4->token_str);
 													// ローカル変数名の設定
 													function_manager::get_instance()->set_localname_and_realname(
@@ -303,7 +308,10 @@ var			:	typest TOKEN					{
 													printf("realname=%s\n", $2->token_str.c_str());
 												}
 			// 文字列配列（初期化なし）
-			|	STRING TOKEN LEFT_INDEX_BRACKET INT_RETERAL RIGHT_INDEX_BRACKET	{
+			|	STRING TOKEN LEFT_INDEX_BRACKET expr RIGHT_INDEX_BRACKET	{
+													if($4->type != TYPE_INT) {
+														yyerror("[ERROR] Array index specified only int.\n");
+													}
 													$$ = new t_token(*$2);
 													$$->type = TYPE_STRING_ARRAY;
 													$$->array_size = stoi($4->token_str);
@@ -322,7 +330,10 @@ var			:	typest TOKEN					{
 													$$->token_str = "strdim " + $$->token_str + " " + $4->token_str + "\n";
 												}
 			// 整数配列（初期化あり）
-			|	INT TOKEN LEFT_INDEX_BRACKET INT_RETERAL RIGHT_INDEX_BRACKET EQUAL LEFT_INDEX_BRACKET initialize_intval_st RIGHT_INDEX_BRACKET {
+			|	INT TOKEN LEFT_INDEX_BRACKET expr RIGHT_INDEX_BRACKET EQUAL LEFT_INDEX_BRACKET initialize_intval_st RIGHT_INDEX_BRACKET {
+													if($4->type != TYPE_INT) {
+														yyerror("[ERROR] Array index specified only int.\n");
+													}
 													std::vector<std::string> initialize_list = common_utl::split($8->token_str, ' ');
 													$$ = new t_token(*$2);
 													$$->type = TYPE_INT_ARRAY;
@@ -349,7 +360,10 @@ var			:	typest TOKEN					{
 													}
 												}
 			// 文字列配列（初期化あり）
-			|	STRING TOKEN LEFT_INDEX_BRACKET INT_RETERAL RIGHT_INDEX_BRACKET EQUAL LEFT_INDEX_BRACKET initialize_strval_st RIGHT_INDEX_BRACKET	{
+			|	STRING TOKEN LEFT_INDEX_BRACKET expr RIGHT_INDEX_BRACKET EQUAL LEFT_INDEX_BRACKET initialize_strval_st RIGHT_INDEX_BRACKET	{
+													if($4->type != TYPE_INT) {
+														yyerror("[ERROR] Array index specified only int.\n");
+													}
 													std::vector<std::string> initialize_list = common_utl::split($8->token_str, ' ');
 													$$ = new t_token(*$2);
 													$$->type = TYPE_INT_ARRAY;
@@ -530,6 +544,9 @@ len_target		:	TOKEN						{
 													$$ = $2;
 												}
 
+as_is_st	: AS_IS_TOKEN BRACE STR_RETERAL END_BRACE	{
+													$$ = $1; $$->type = TYPE_STRING;
+												}
 expr		: INT_RETERAL						{ $$ = $1; $$->type = TYPE_INT; }
 			| STR_RETERAL						{ $$ = $1; $$->type = TYPE_STRING; }
 			| MINUS_INT_RETERAL					{ $$ = $1; $$->type = TYPE_INT; }
@@ -670,6 +687,8 @@ expr		: INT_RETERAL						{ $$ = $1; $$->type = TYPE_INT; }
 													$$->token_str = std::to_string($2->array_size);
 													$$->type = TYPE_INT;
 												}
+			| as_is_st							{	$$ = $1;	}
+			| callst							{	$$ = $1;	}
 			| TOKEN								{
 													$$ = new t_token(
 														*( function_manager::get_instance()->select_realname_to_t_token (

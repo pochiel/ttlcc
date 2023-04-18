@@ -1,0 +1,74 @@
+extern func int int int int get_address_offset(string ip_addr)
+extern func int str_count(string msg, string delimiter)
+extern func string [] split(string msg, string delimiter)
+extern func string [] split_single_delimiter(string msg, string delimiter)
+extern func string [] split_long_delimiter(string msg, string delimiter)
+
+func int main(void)
+    int ip_addr[4];
+    [ip_addr[0], ip_addr[1], ip_addr[2], ip_addr[3]] = get_address_offset("192.168.123.111");
+	return 0;
+endfunc
+
+// IPアドレスを分割して整数に
+func int int int int get_address_offset(string ip_addr)
+    string ret[4];
+    ret = split(ip_addr, ".");		// IPV4 アドレスを . で分解する。
+    return [ret[0], ret[1], ret[2], ret[3]];
+endfunc
+
+// 文字列をデリミタで分割
+// delimiter が1文字の場合、予約関数 strsplit を使えるのでそっちを使う
+// delimiter が1文字より大きい場合、自前で泥臭く分割する
+func string [] split(string msg, string delimiter)
+    if ( strlen(delimiter) > 1 ) then
+        return split_single_delimiter(msg, delimiter);
+    else
+        return split_long_delimiter(msg, delimiter);
+    endif
+endfunc
+
+func string [] split_single_delimiter(string msg, string delimiter)
+    string temp = "";
+    int i = 0;
+    int j = 0;
+    int ret_index = 0;
+    temp = msg;
+    // delimiter の個数を数えて、配列を作る
+    int cnt_delimiter = 0;
+    cnt_delimiter = str_count(msg, delimiter);
+    string tmp_ary[9];
+    string ret[cnt_delimiter];
+    // 分割
+    do while (cnt_delimiter > i)
+        // 分割した数をカウントする
+        i = i + (strsplit(temp, delimiter) - 1);
+        tmp_ary[0] = as_is(groupmatchstr1);
+        tmp_ary[1] = as_is(groupmatchstr2);
+        tmp_ary[2] = as_is(groupmatchstr3);
+        tmp_ary[3] = as_is(groupmatchstr4);
+        tmp_ary[4] = as_is(groupmatchstr5);
+        tmp_ary[5] = as_is(groupmatchstr6);
+        tmp_ary[6] = as_is(groupmatchstr7);
+        tmp_ary[7] = as_is(groupmatchstr8);
+        tmp_ary[8] = as_is(groupmatchstr9);
+        temp = tmp_ary[8];
+        // 戻り値用配列にコピー
+        for j=0 to 7
+            ret[ret_index] = tmp_ary[j];
+            ret_index = ret_index + 1;
+        next
+	loop
+    // 最後の分割要素をtmp_ary の末尾に入れる
+    ret[ret_index] = tmp_ary[8];
+    return ret;
+endfunc
+
+func string [] split_long_delimiter(string msg, string delimiter)
+    string ret[1];
+    return ret;     // 仮
+endfunc
+
+extern func int str_count(string msg, string delimiter)
+    return 0;   // 仮
+endfunc
